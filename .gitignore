@@ -1,20 +1,35 @@
-# 微信开发者工具
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+
+# Database
+backend/data/
+*.db
+*.sqlite
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE
 .idea/
 .vscode/
-*.log
+*.swp
+*.swo
 
-# 依赖
-node_modules/
-miniprogram_npm/
-
-# 构建产物
-dist/
-
-# 系统文件
+# OS
 .DS_Store
 Thumbs.db
 
-# 临时文件
-*.swp
-*.swo
-*~
+# PWA
+sw.js
+workbox-*.js

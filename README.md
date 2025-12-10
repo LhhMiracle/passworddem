@@ -1,65 +1,124 @@
-# 密码保险箱 (PasswordDem)
+# 密码保险箱 (Password Vault)
 
-一款类似 1Password 的微信小程序密码管理工具。
+一款类似 1Password 的密码管理工具，支持多设备同步。
 
 ## 功能特点
 
-- **安全存储**: 所有密码本地加密存储，采用 AES 加密算法
-- **主密码保护**: 使用单一主密码保护所有存储的密码
-- **密码生成器**: 自动生成高强度随机密码
-- **分类管理**: 支持登录账号、银行卡、WiFi密码等多种分类
-- **一键复制**: 快速复制密码，30秒后自动清除剪贴板
-- **密码强度检测**: 实时评估密码安全等级
-- **自动锁定**: 离开应用后自动锁定保险箱
-- **数据导入导出**: 支持备份和恢复密码数据
+- 🔒 **端到端加密** - 使用 AES-256-GCM 加密，服务器无法解密您的数据
+- 📱 **跨平台支持** - PWA 应用，支持 Mac、Windows、手机浏览器
+- 🔄 **多设备同步** - 数据自动同步到所有设备
+- 🎲 **密码生成器** - 生成安全的随机密码
+- 📋 **一键复制** - 快速复制密码，30秒后自动清除剪贴板
+- 🏷️ **分类管理** - 登录账号、银行卡、WiFi、安全笔记等
 
-## 页面结构
+## 技术栈
 
+### 后端
+- Node.js + Express
+- SQLite (better-sqlite3)
+- JWT 认证
+- bcrypt 密码哈希
+
+### 前端
+- React 18
+- Vite
+- TailwindCSS
+- PWA (vite-plugin-pwa)
+- Web Crypto API
+
+## 快速开始
+
+### 1. 安装依赖
+
+```bash
+# 后端
+cd backend
+npm install
+
+# 前端
+cd frontend
+npm install
 ```
-pages/
-├── welcome/     # 欢迎引导页
-├── login/       # 登录解锁页
-├── register/    # 注册设置主密码
-├── vault/       # 密码列表主页
-├── add/         # 添加/编辑密码
-├── detail/      # 密码详情页
-└── settings/    # 设置页面
+
+### 2. 启动开发服务器
+
+```bash
+# 启动后端 (端口 3001)
+cd backend
+npm run dev
+
+# 启动前端 (端口 5173)
+cd frontend
+npm run dev
 ```
 
-## 技术实现
+### 3. 访问应用
 
-- **加密**: 使用 XOR 加密 + Base64 编码（生产环境建议使用 AES-256）
-- **密码哈希**: 多轮哈希 + 盐值
-- **存储**: 微信小程序本地存储 (wx.setStorageSync)
+打开浏览器访问 http://localhost:5173
+
+## 部署
+
+### 后端部署 (Railway/Render)
+
+1. 设置环境变量:
+   - `JWT_SECRET`: JWT 密钥
+   - `FRONTEND_URL`: 前端 URL
+   - `PORT`: 端口号
+
+2. 部署命令:
+   ```bash
+   cd backend && npm start
+   ```
+
+### 前端部署 (Vercel/Netlify)
+
+1. 设置环境变量:
+   - `VITE_API_URL`: 后端 API 地址
+
+2. 构建命令:
+   ```bash
+   cd frontend && npm run build
+   ```
 
 ## 安全说明
 
-1. 主密码无法找回，请务必牢记
-2. 所有数据仅存储在本地，不会上传服务器
-3. 建议定期更换主密码
-4. 建议使用密码生成器创建强密码
+1. **主密码**: 用于派生加密密钥，不会发送到服务器
+2. **端到端加密**: 所有密码数据在客户端加密后才上传
+3. **零知识架构**: 服务器只存储加密后的数据
+4. **PBKDF2**: 使用 100,000 次迭代派生密钥
+5. **AES-256-GCM**: 业界标准的加密算法
 
-## 使用方法
+## 项目结构
 
-1. 使用微信开发者工具打开项目
-2. 首次使用需设置主密码
-3. 添加您需要保存的密码
-4. 使用时通过主密码解锁
-
-## 开发
-
-```bash
-# 克隆项目
-git clone https://github.com/darioluanne770968-prog/passworddem.git
-
-# 使用微信开发者工具打开项目目录
+```
+├── backend/                # 后端 API
+│   ├── src/
+│   │   ├── index.js       # 入口文件
+│   │   ├── routes/        # API 路由
+│   │   ├── models/        # 数据库模型
+│   │   └── middleware/    # 中间件
+│   └── package.json
+│
+├── frontend/              # 前端 PWA
+│   ├── src/
+│   │   ├── pages/        # 页面组件
+│   │   ├── components/   # 通用组件
+│   │   ├── context/      # React Context
+│   │   ├── utils/        # 工具函数
+│   │   └── styles/       # 样式文件
+│   ├── public/           # 静态资源
+│   └── package.json
+│
+└── README.md
 ```
 
-## 注意事项
+## 后续计划
 
-- 本项目仅供学习参考
-- 生产环境请使用更安全的加密算法（如 AES-256-GCM）
-- 建议增加服务端备份功能
+- [ ] Electron 桌面应用
+- [ ] iOS/Android 原生应用
+- [ ] 浏览器扩展（自动填充）
+- [ ] 双因素认证 (2FA)
+- [ ] 密码泄露检测
 
 ## License
 
