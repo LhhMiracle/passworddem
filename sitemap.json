@@ -1,7 +1,9 @@
 {
-  "desc": "关于本小程序的索引配置",
-  "rules": [{
-    "action": "allow",
-    "page": "*"
-  }]
+  "desc": "关于本文件的更多信息，请参考文档",
+  "rules": [
+    {
+      "action": "disallow",
+      "page": "*"
+    }
+  ]
 }

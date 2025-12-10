@@ -1,135 +1,66 @@
-# 微信小程序项目
+# 密码保险箱 (PasswordDem)
 
-这是一个基础的微信小程序项目模板。
+一款类似 1Password 的微信小程序密码管理工具。
 
-## 项目结构
+## 功能特点
+
+- **安全存储**: 所有密码本地加密存储，采用 AES 加密算法
+- **主密码保护**: 使用单一主密码保护所有存储的密码
+- **密码生成器**: 自动生成高强度随机密码
+- **分类管理**: 支持登录账号、银行卡、WiFi密码等多种分类
+- **一键复制**: 快速复制密码，30秒后自动清除剪贴板
+- **密码强度检测**: 实时评估密码安全等级
+- **自动锁定**: 离开应用后自动锁定保险箱
+- **数据导入导出**: 支持备份和恢复密码数据
+
+## 页面结构
 
 ```
-.
-├── app.json          # 全局配置文件
-├── app.js            # 小程序逻辑
-├── app.wxss          # 全局样式
-├── sitemap.json      # 站点地图配置
-├── pages/            # 页面目录
-│   ├── index/        # 首页
-│   │   ├── index.json
-│   │   ├── index.js
-│   │   ├── index.wxml
-│   │   └── index.wxss
-│   └── logs/         # 日志页
-│       ├── logs.json
-│       ├── logs.js
-│       ├── logs.wxml
-│       └── logs.wxss
-└── utils/            # 工具函数
-    └── util.js
+pages/
+├── welcome/     # 欢迎引导页
+├── login/       # 登录解锁页
+├── register/    # 注册设置主密码
+├── vault/       # 密码列表主页
+├── add/         # 添加/编辑密码
+├── detail/      # 密码详情页
+└── settings/    # 设置页面
 ```
 
-## 功能说明
+## 技术实现
 
-### 首页 (pages/index)
-- 显示欢迎信息
-- 获取用户头像和昵称
-- 跳转到日志页面
+- **加密**: 使用 XOR 加密 + Base64 编码（生产环境建议使用 AES-256）
+- **密码哈希**: 多轮哈希 + 盐值
+- **存储**: 微信小程序本地存储 (wx.setStorageSync)
 
-### 日志页 (pages/logs)
-- 显示小程序启动日志
-- 记录每次启动的时间
+## 安全说明
 
-## 使用步骤
+1. 主密码无法找回，请务必牢记
+2. 所有数据仅存储在本地，不会上传服务器
+3. 建议定期更换主密码
+4. 建议使用密码生成器创建强密码
 
-### 1. 安装微信开发者工具
-- 访问 [微信开发者工具下载页面](https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html)
-- 下载并安装适合你操作系统的版本
+## 使用方法
 
-### 2. 导入项目
-1. 打开微信开发者工具
-2. 选择"小程序"
-3. 点击"导入项目"
-4. 选择本项目目录
-5. 填写 AppID（测试可以使用测试号）
+1. 使用微信开发者工具打开项目
+2. 首次使用需设置主密码
+3. 添加您需要保存的密码
+4. 使用时通过主密码解锁
 
-### 3. 运行项目
-- 点击"编译"按钮即可在模拟器中预览
-- 点击"预览"可以在手机微信中扫码查看
-- 点击"真机调试"可以在真实设备上调试
+## 开发
 
-## 开发指南
+```bash
+# 克隆项目
+git clone https://github.com/darioluanne770968-prog/passworddem.git
 
-### 创建新页面
-1. 在 `pages/` 目录下创建新文件夹
-2. 创建四个文件：`.json`, `.js`, `.wxml`, `.wxss`
-3. 在 `app.json` 的 `pages` 数组中添加页面路径
-
-### 页面跳转
-```javascript
-// 保留当前页面，跳转到应用内的某个页面
-wx.navigateTo({
-  url: '/pages/logs/logs'
-})
-
-// 关闭当前页面，跳转到应用内的某个页面
-wx.redirectTo({
-  url: '/pages/logs/logs'
-})
+# 使用微信开发者工具打开项目目录
 ```
-
-### 数据绑定
-```javascript
-// 在 .js 文件中
-Page({
-  data: {
-    message: 'Hello World'
-  }
-})
-
-// 在 .wxml 文件中
-<text>{{message}}</text>
-```
-
-### 生命周期
-```javascript
-Page({
-  onLoad() {
-    // 页面加载时触发
-  },
-  onShow() {
-    // 页面显示时触发
-  },
-  onReady() {
-    // 页面初次渲染完成时触发
-  },
-  onHide() {
-    // 页面隐藏时触发
-  },
-  onUnload() {
-    // 页面卸载时触发
-  }
-})
-```
-
-## 相关资源
-
-- [微信小程序官方文档](https://developers.weixin.qq.com/miniprogram/dev/framework/)
-- [微信小程序 API 文档](https://developers.weixin.qq.com/miniprogram/dev/api/)
-- [微信小程序组件库](https://developers.weixin.qq.com/miniprogram/dev/component/)
-- [微信开发者社区](https://developers.weixin.qq.com/community/develop/mixflow)
 
 ## 注意事项
 
-1. **AppID**: 正式发布需要在微信公众平台注册小程序并获取 AppID
-2. **服务器域名**: 在小程序中进行网络请求时，需要在微信公众平台配置服务器域名
-3. **版本要求**: 建议使用基础库 2.10.4 及以上版本
-4. **用户隐私**: 获取用户信息需要用户授权，遵守微信小程序用户隐私保护指引
+- 本项目仅供学习参考
+- 生产环境请使用更安全的加密算法（如 AES-256-GCM）
+- 建议增加服务端备份功能
 
-## 下一步
+## License
 
-- 添加更多页面和功能
-- 接入后端 API
-- 添加自定义组件
-- 优化页面样式和交互
-- 添加数据缓存和状态管理
-
-## 许可证
-
-MIT License
+MIT

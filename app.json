@@ -1,14 +1,20 @@
 {
   "pages": [
-    "pages/index/index",
-    "pages/logs/logs"
+    "pages/welcome/welcome",
+    "pages/login/login",
+    "pages/register/register",
+    "pages/vault/vault",
+    "pages/add/add",
+    "pages/detail/detail",
+    "pages/settings/settings"
   ],
   "window": {
-    "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#fff",
-    "navigationBarTitleText": "我的小程序",
-    "navigationBarTextStyle": "black"
+    "backgroundTextStyle": "dark",
+    "navigationBarBackgroundColor": "#0052CC",
+    "navigationBarTitleText": "密码保险箱",
+    "navigationBarTextStyle": "white"
   },
   "style": "v2",
-  "sitemapLocation": "sitemap.json"
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
 }

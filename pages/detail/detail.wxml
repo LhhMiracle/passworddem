@@ -1,0 +1,87 @@
+<!-- 密码详情页面 -->
+<view class="detail-container">
+  <scroll-view class="detail-scroll" scroll-y="{{true}}">
+    <!-- 头部信息 -->
+    <view class="detail-header">
+      <view class="header-icon" style="background-color: {{categoryColor}};">
+        <text>{{password.title[0]}}</text>
+      </view>
+      <view class="header-info">
+        <view class="header-title">{{password.title}}</view>
+        <view class="header-category">{{categoryName}}</view>
+      </view>
+    </view>
+
+    <!-- 账号信息 -->
+    <view class="detail-section">
+      <view class="section-title">账号信息</view>
+
+      <view class="info-item" bindtap="copyField" data-field="username" data-value="{{password.username}}">
+        <view class="item-label">用户名/邮箱</view>
+        <view class="item-value-wrapper">
+          <text class="item-value">{{password.username}}</text>
+          <text class="copy-icon">&#128203;</text>
+        </view>
+      </view>
+
+      <view class="info-item" bindtap="copyField" data-field="password" data-value="{{password.password}}">
+        <view class="item-label">密码</view>
+        <view class="item-value-wrapper">
+          <text class="item-value password-value">{{showPassword ? password.password : maskedPassword}}</text>
+          <text class="toggle-icon" catchtap="togglePassword">{{showPassword ? '&#128065;' : '&#128064;'}}</text>
+          <text class="copy-icon">&#128203;</text>
+        </view>
+        <!-- 密码强度 -->
+        <view class="strength-indicator">
+          <view class="strength-dot" style="background-color: {{strengthColor}};"></view>
+          <text style="color: {{strengthColor}};">{{strengthLabel}}</text>
+        </view>
+      </view>
+
+      <view class="info-item" wx:if="{{password.website}}" bindtap="openWebsite">
+        <view class="item-label">网站地址</view>
+        <view class="item-value-wrapper">
+          <text class="item-value link-value">{{password.website}}</text>
+          <text class="link-icon">&#128279;</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 备注信息 -->
+    <view class="detail-section" wx:if="{{password.notes}}">
+      <view class="section-title">备注</view>
+      <view class="notes-content">
+        <text>{{password.notes}}</text>
+      </view>
+    </view>
+
+    <!-- 时间信息 -->
+    <view class="detail-section">
+      <view class="section-title">记录信息</view>
+      <view class="time-info">
+        <view class="time-item">
+          <text class="time-label">创建时间</text>
+          <text class="time-value">{{createdTime}}</text>
+        </view>
+        <view class="time-item">
+          <text class="time-label">最后修改</text>
+          <text class="time-value">{{updatedTime}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 危险区域 -->
+    <view class="danger-section">
+      <button class="btn-delete" bindtap="deletePassword">
+        &#128465; 删除此密码
+      </button>
+    </view>
+  </scroll-view>
+
+  <!-- 底部操作栏 -->
+  <view class="detail-footer">
+    <button class="btn-edit" bindtap="editPassword">
+      &#9998; 编辑
+    </button>
+  </view>
+</view>

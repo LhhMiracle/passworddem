@@ -1,5 +1,5 @@
 {
-  "description": "项目配置文件",
+  "description": "密码保险箱 - 类似1Password的密码管理小程序",
   "packOptions": {
     "ignore": [],
     "include": []
@@ -41,8 +41,8 @@
   },
   "compileType": "miniprogram",
   "libVersion": "2.19.4",
-  "appid": "touristappid",
-  "projectname": "wechat-miniprogram",
+  "appid": "wxd8d2f35e8b1f7c3a",
+  "projectname": "passworddem",
   "condition": {},
   "editorSetting": {
     "tabIndent": "insertSpaces",
