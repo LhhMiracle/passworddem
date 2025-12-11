@@ -6,7 +6,7 @@
 const express = require('express');
 const crypto = require('crypto');
 const { getDb } = require('../models/database');
-const { authenticate } = require('./auth');
+const { authMiddleware } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -29,7 +29,7 @@ function verifyPassword(password, hash) {
  * 创建共享链接
  * POST /api/share
  */
-router.post('/', authenticate, (req, res) => {
+router.post('/', authMiddleware, (req, res) => {
   try {
     const { itemId, expiresIn, maxViews, password, encryptedData, iv } = req.body;
     const userId = req.user.id;
@@ -102,7 +102,7 @@ router.post('/', authenticate, (req, res) => {
  * 获取我的共享链接列表
  * GET /api/share
  */
-router.get('/', authenticate, (req, res) => {
+router.get('/', authMiddleware, (req, res) => {
   try {
     const db = getDb();
     const userId = req.user.id;
@@ -144,7 +144,7 @@ router.get('/', authenticate, (req, res) => {
  * 撤销共享链接
  * DELETE /api/share/:id
  */
-router.delete('/:id', authenticate, (req, res) => {
+router.delete('/:id', authMiddleware, (req, res) => {
   try {
     const db = getDb();
     const userId = req.user.id;

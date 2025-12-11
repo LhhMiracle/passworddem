@@ -77,16 +77,6 @@ function initDatabase() {
     )
   `);
 
-  // 创建索引
-  db.exec(`
-    CREATE INDEX IF NOT EXISTS idx_vault_items_user_id ON vault_items(user_id);
-    CREATE INDEX IF NOT EXISTS idx_vault_items_category ON vault_items(category);
-    CREATE INDEX IF NOT EXISTS idx_vault_items_favorite ON vault_items(user_id, is_favorite);
-    CREATE INDEX IF NOT EXISTS idx_tags_user_id ON tags(user_id);
-    CREATE INDEX IF NOT EXISTS idx_item_tags_item ON item_tags(item_id);
-    CREATE INDEX IF NOT EXISTS idx_item_tags_tag ON item_tags(tag_id);
-  `);
-
   // 添加新列（如果不存在）- 用于升级现有数据库
   try {
     db.exec(`ALTER TABLE vault_items ADD COLUMN is_favorite INTEGER DEFAULT 0`);
@@ -97,6 +87,22 @@ function initDatabase() {
     db.exec(`ALTER TABLE vault_items ADD COLUMN favorite_order INTEGER`);
   } catch (e) {
     // 列已存在，忽略错误
+  }
+
+  // 创建索引（在添加列之后）
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_vault_items_user_id ON vault_items(user_id);
+    CREATE INDEX IF NOT EXISTS idx_vault_items_category ON vault_items(category);
+    CREATE INDEX IF NOT EXISTS idx_tags_user_id ON tags(user_id);
+    CREATE INDEX IF NOT EXISTS idx_item_tags_item ON item_tags(item_id);
+    CREATE INDEX IF NOT EXISTS idx_item_tags_tag ON item_tags(tag_id);
+  `);
+
+  // 创建收藏索引（需要在列存在之后）
+  try {
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_vault_items_favorite ON vault_items(user_id, is_favorite)`);
+  } catch (e) {
+    // 索引已存在或列不存在，忽略错误
   }
 
   // 2FA 相关列
