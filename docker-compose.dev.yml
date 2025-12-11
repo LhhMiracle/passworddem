@@ -1,0 +1,51 @@
+version: '3.8'
+
+# 开发环境配置
+services:
+  # 后端服务（开发模式）
+  backend:
+    build:
+      context: ./backend
+      target: dev
+    container_name: password-vault-backend-dev
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - JWT_SECRET=dev-secret-key
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - backend-data-dev:/app/data
+      - backend-uploads-dev:/app/uploads
+    ports:
+      - "3001:3001"
+    networks:
+      - password-vault-network-dev
+
+  # 前端服务（开发模式）
+  frontend:
+    build:
+      context: ./frontend
+      target: dev
+    container_name: password-vault-frontend-dev
+    restart: unless-stopped
+    environment:
+      - VITE_API_URL=http://localhost:3001
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    networks:
+      - password-vault-network-dev
+
+networks:
+  password-vault-network-dev:
+    driver: bridge
+
+volumes:
+  backend-data-dev:
+  backend-uploads-dev:

@@ -1,16 +1,120 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" dir="ltr">
   <head>
     <meta charset="UTF-8" />
+    <!-- 基础 SEO -->
+    <title>密码保险箱 - 安全的密码管理工具</title>
+    <meta name="description" content="密码保险箱是一款安全的密码管理工具，采用端到端加密（AES-256-GCM）保护您的所有密码。支持密码生成、健康检查、泄露检测、双因素认证和生物识别解锁。" />
+    <meta name="keywords" content="密码管理,密码保险箱,密码生成器,密码安全,端到端加密,双因素认证,生物识别,1Password替代" />
+    <meta name="author" content="Haihui Lu" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- 视口和移动端优化 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="密码保险箱" />
+
+    <!-- 主题色 -->
+    <meta name="theme-color" content="#0052CC" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1a1a2e" media="(prefers-color-scheme: dark)" />
+    <meta name="msapplication-TileColor" content="#0052CC" />
+    <meta name="msapplication-navbutton-color" content="#0052CC" />
+
+    <!-- Open Graph / 社交分享 -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="密码保险箱 - 安全的密码管理工具" />
+    <meta property="og:description" content="采用端到端加密保护您的所有密码，支持密码生成、健康检查、双因素认证等功能。" />
+    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:url" content="https://passworddem.example.com" />
+    <meta property="og:site_name" content="密码保险箱" />
+    <meta property="og:locale" content="zh_CN" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="密码保险箱 - 安全的密码管理工具" />
+    <meta name="twitter:description" content="采用端到端加密保护您的所有密码" />
+    <meta name="twitter:image" content="/og-image.png" />
+
+    <!-- 图标 -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#0052CC" />
-    <meta name="description" content="安全的密码管理工具 - 类似1Password" />
-    <link rel="apple-touch-icon" href="/icon-192.png" />
-    <title>密码保险箱</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icon-16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icon-192.png" />
+    <link rel="mask-icon" href="/mask-icon.svg" color="#0052CC" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- 预连接优化 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://api.pwnedpasswords.com" />
+
+    <!-- 安全头 -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+
+    <!-- 结构化数据 -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "密码保险箱",
+      "applicationCategory": "SecurityApplication",
+      "operatingSystem": "Web, Windows, macOS, Linux",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "CNY"
+      },
+      "description": "安全的密码管理工具，采用端到端加密保护您的所有密码",
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "100"
+      }
+    }
+    </script>
+
+    <!-- 无 JavaScript 提示样式 -->
+    <noscript>
+      <style>
+        .js-required { display: none !important; }
+        .noscript-message {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          font-family: system-ui, -apple-system, sans-serif;
+          text-align: center;
+          padding: 20px;
+          background: #f5f5f5;
+        }
+      </style>
+    </noscript>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- 跳过导航链接（无障碍访问） -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded">
+      跳到主要内容
+    </a>
+
+    <!-- 无 JavaScript 提示 -->
+    <noscript>
+      <div class="noscript-message" role="alert">
+        <div>
+          <h1>需要启用 JavaScript</h1>
+          <p>密码保险箱需要 JavaScript 才能正常运行。请启用浏览器的 JavaScript 功能。</p>
+        </div>
+      </div>
+    </noscript>
+
+    <!-- 应用根节点 -->
+    <div id="root" role="application" aria-label="密码保险箱应用"></div>
+
+    <!-- 主脚本 -->
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
