@@ -10,6 +10,7 @@ const rateLimit = require('express-rate-limit');
 
 const authRoutes = require('./routes/auth');
 const vaultRoutes = require('./routes/vault');
+const tagsRoutes = require('./routes/tags');
 const { initDatabase } = require('./models/database');
 
 const app = express();
@@ -39,6 +40,7 @@ initDatabase();
 // 路由
 app.use('/api/auth', authRoutes);
 app.use('/api/vault', vaultRoutes);
+app.use('/api/tags', tagsRoutes);
 
 // 健康检查
 app.get('/api/health', (req, res) => {

@@ -45,9 +45,35 @@ function initDatabase() {
       encrypted_data TEXT NOT NULL,
       iv TEXT NOT NULL,
       category TEXT DEFAULT 'login',
+      is_favorite INTEGER DEFAULT 0,
+      favorite_order INTEGER,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  // 标签表
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS tags (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      color TEXT DEFAULT '#3b82f6',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE(user_id, name)
+    )
+  `);
+
+  // 密码条目-标签关联表
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS item_tags (
+      item_id INTEGER NOT NULL,
+      tag_id INTEGER NOT NULL,
+      PRIMARY KEY (item_id, tag_id),
+      FOREIGN KEY (item_id) REFERENCES vault_items(id) ON DELETE CASCADE,
+      FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
     )
   `);
 
@@ -55,7 +81,23 @@ function initDatabase() {
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_vault_items_user_id ON vault_items(user_id);
     CREATE INDEX IF NOT EXISTS idx_vault_items_category ON vault_items(category);
+    CREATE INDEX IF NOT EXISTS idx_vault_items_favorite ON vault_items(user_id, is_favorite);
+    CREATE INDEX IF NOT EXISTS idx_tags_user_id ON tags(user_id);
+    CREATE INDEX IF NOT EXISTS idx_item_tags_item ON item_tags(item_id);
+    CREATE INDEX IF NOT EXISTS idx_item_tags_tag ON item_tags(tag_id);
   `);
+
+  // 添加新列（如果不存在）- 用于升级现有数据库
+  try {
+    db.exec(`ALTER TABLE vault_items ADD COLUMN is_favorite INTEGER DEFAULT 0`);
+  } catch (e) {
+    // 列已存在，忽略错误
+  }
+  try {
+    db.exec(`ALTER TABLE vault_items ADD COLUMN favorite_order INTEGER`);
+  } catch (e) {
+    // 列已存在，忽略错误
+  }
 
   console.log('✅ Database initialized');
 }

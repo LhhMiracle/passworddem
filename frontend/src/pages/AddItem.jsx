@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useVault, CATEGORIES } from '../context/VaultContext';
-import { generatePassword, evaluatePasswordStrength, getStrengthLabel, getStrengthColor } from '../utils/crypto';
+import { evaluatePasswordStrength, getStrengthLabel, getStrengthColor } from '../utils/crypto';
+import PasswordGenerator from '../components/PasswordGenerator';
 
 export default function AddItem() {
   const navigate = useNavigate();
@@ -25,16 +26,6 @@ export default function AddItem() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // 密码生成器选项
-  const [genOptions, setGenOptions] = useState({
-    length: 16,
-    uppercase: true,
-    lowercase: true,
-    numbers: true,
-    symbols: true
-  });
-  const [generatedPassword, setGeneratedPassword] = useState('');
-
   // 加载现有数据
   useEffect(() => {
     if (existingItem) {
@@ -49,21 +40,9 @@ export default function AddItem() {
     }
   }, [existingItem]);
 
-  // 生成密码
-  useEffect(() => {
-    if (showGenerator) {
-      regeneratePassword();
-    }
-  }, [showGenerator, genOptions]);
-
-  const regeneratePassword = () => {
-    const pwd = generatePassword(genOptions.length, genOptions);
-    setGeneratedPassword(pwd);
-  };
-
-  const useGenerated = () => {
-    setFormData(prev => ({ ...prev, password: generatedPassword }));
-    setShowGenerator(false);
+  // 使用生成的密码
+  const handleSelectPassword = (pwd) => {
+    setFormData(prev => ({ ...prev, password: pwd }));
   };
 
   const handleChange = (e) => {
@@ -275,85 +254,11 @@ export default function AddItem() {
 
       {/* 密码生成器弹窗 */}
       {showGenerator && (
-        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
-          <div className="bg-white w-full max-w-lg rounded-t-3xl p-6 safe-bottom animate-slide-up">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold">密码生成器</h3>
-              <button onClick={() => setShowGenerator(false)} className="text-gray-400">
-                ✕
-              </button>
-            </div>
-
-            {/* 生成的密码 */}
-            <div className="bg-gray-100 rounded-xl p-4 mb-6 text-center">
-              <p className="font-mono text-lg font-bold text-primary-600 break-all">
-                {generatedPassword}
-              </p>
-            </div>
-
-            {/* 选项 */}
-            <div className="space-y-4 mb-6">
-              <div>
-                <label className="block text-sm text-gray-600 mb-2">
-                  密码长度: {genOptions.length}
-                </label>
-                <input
-                  type="range"
-                  min={8}
-                  max={32}
-                  value={genOptions.length}
-                  onChange={(e) => setGenOptions(prev => ({ ...prev, length: parseInt(e.target.value) }))}
-                  className="w-full"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { key: 'uppercase', label: '大写字母 (A-Z)' },
-                  { key: 'lowercase', label: '小写字母 (a-z)' },
-                  { key: 'numbers', label: '数字 (0-9)' },
-                  { key: 'symbols', label: '特殊符号 (!@#)' }
-                ].map(({ key, label }) => (
-                  <label key={key} className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={genOptions[key]}
-                      onChange={(e) => setGenOptions(prev => ({ ...prev, [key]: e.target.checked }))}
-                      className="w-4 h-4 text-primary-500"
-                    />
-                    {label}
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* 按钮 */}
-            <div className="flex gap-3">
-              <button
-                onClick={regeneratePassword}
-                className="flex-1 py-3 bg-gray-100 text-gray-600 font-medium rounded-xl"
-              >
-                🔄 重新生成
-              </button>
-              <button
-                onClick={useGenerated}
-                className="flex-1 py-3 bg-primary-500 text-white font-medium rounded-xl"
-              >
-                使用此密码
-              </button>
-            </div>
-          </div>
-
-          <style>{`
-            @keyframes slide-up {
-              from { transform: translateY(100%); }
-              to { transform: translateY(0); }
-            }
-            .animate-slide-up {
-              animation: slide-up 0.3s ease-out;
-            }
-          `}</style>
-        </div>
+        <PasswordGenerator
+          onSelect={handleSelectPassword}
+          onClose={() => setShowGenerator(false)}
+          initialPassword={formData.password}
+        />
       )}
     </div>
   );

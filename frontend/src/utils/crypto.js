@@ -122,29 +122,85 @@ export async function decryptData(encryptedData, iv, key) {
 
 /**
  * 生成随机密码
+ * @param {number} length - 密码长度 (8-64)
+ * @param {Object} options - 生成选项
+ * @param {boolean} options.uppercase - 包含大写字母
+ * @param {boolean} options.lowercase - 包含小写字母
+ * @param {boolean} options.numbers - 包含数字
+ * @param {boolean} options.symbols - 包含特殊符号
+ * @param {boolean} options.excludeAmbiguous - 排除易混淆字符 (0/O, 1/l/I)
  */
 export function generatePassword(length = 16, options = {}) {
   const {
     uppercase = true,
     lowercase = true,
     numbers = true,
-    symbols = true
+    symbols = true,
+    excludeAmbiguous = false
   } = options;
 
+  // 定义字符集
+  const UPPERCASE = excludeAmbiguous ? 'ABCDEFGHJKLMNPQRSTUVWXYZ' : 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'; // 排除 I, O
+  const LOWERCASE = excludeAmbiguous ? 'abcdefghjkmnpqrstuvwxyz' : 'abcdefghijklmnopqrstuvwxyz'; // 排除 l
+  const NUMBERS = excludeAmbiguous ? '23456789' : '0123456789'; // 排除 0, 1
+  const SYMBOLS = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+
   let chars = '';
-  if (uppercase) chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  if (lowercase) chars += 'abcdefghijklmnopqrstuvwxyz';
-  if (numbers) chars += '0123456789';
-  if (symbols) chars += '!@#$%^&*()_+-=[]{}|;:,.<>?';
+  const requiredChars = []; // 确保每种类型至少出现一次
 
-  if (!chars) chars = 'abcdefghijklmnopqrstuvwxyz';
+  if (uppercase) {
+    chars += UPPERCASE;
+    requiredChars.push(UPPERCASE);
+  }
+  if (lowercase) {
+    chars += LOWERCASE;
+    requiredChars.push(LOWERCASE);
+  }
+  if (numbers) {
+    chars += NUMBERS;
+    requiredChars.push(NUMBERS);
+  }
+  if (symbols) {
+    chars += SYMBOLS;
+    requiredChars.push(SYMBOLS);
+  }
 
+  if (!chars) {
+    chars = LOWERCASE;
+    requiredChars.push(LOWERCASE);
+  }
+
+  // 生成随机数组
   const array = new Uint32Array(length);
   crypto.getRandomValues(array);
 
+  // 生成密码
   let password = '';
   for (let i = 0; i < length; i++) {
     password += chars[array[i] % chars.length];
+  }
+
+  // 确保每种选中的字符类型至少出现一次
+  if (requiredChars.length > 1 && length >= requiredChars.length) {
+    const passwordArr = password.split('');
+    const positions = new Set();
+
+    // 随机选择位置
+    while (positions.size < requiredChars.length) {
+      const randArray = new Uint32Array(1);
+      crypto.getRandomValues(randArray);
+      positions.add(randArray[0] % length);
+    }
+
+    // 在这些位置插入必需字符
+    const posArray = Array.from(positions);
+    requiredChars.forEach((charSet, index) => {
+      const randArray = new Uint32Array(1);
+      crypto.getRandomValues(randArray);
+      passwordArr[posArray[index]] = charSet[randArray[0] % charSet.length];
+    });
+
+    password = passwordArr.join('');
   }
 
   return password;

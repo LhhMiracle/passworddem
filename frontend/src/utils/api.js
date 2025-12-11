@@ -98,6 +98,49 @@ export const vault = {
     request('/vault/import', {
       method: 'POST',
       body: JSON.stringify({ items, mode })
+    }),
+
+  // 收藏相关
+  getFavorites: () => request('/vault/favorites'),
+
+  toggleFavorite: (id) =>
+    request(`/vault/items/${id}/favorite`, { method: 'POST' }),
+
+  reorderFavorites: (items) =>
+    request('/vault/favorites/reorder', {
+      method: 'PUT',
+      body: JSON.stringify({ items })
+    })
+};
+
+// 标签相关
+export const tags = {
+  getAll: () => request('/tags'),
+
+  create: (name, color) =>
+    request('/tags', {
+      method: 'POST',
+      body: JSON.stringify({ name, color })
+    }),
+
+  update: (id, name, color) =>
+    request(`/tags/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ name, color })
+    }),
+
+  delete: (id) =>
+    request(`/tags/${id}`, { method: 'DELETE' }),
+
+  getItemsByTag: (tagId) => request(`/tags/${tagId}/items`),
+
+  // 密码条目标签
+  getItemTags: (itemId) => request(`/tags/items/${itemId}/tags`),
+
+  setItemTags: (itemId, tagIds) =>
+    request(`/tags/items/${itemId}/tags`, {
+      method: 'POST',
+      body: JSON.stringify({ tagIds })
     })
 };
 
