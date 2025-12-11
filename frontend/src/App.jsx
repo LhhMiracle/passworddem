@@ -10,6 +10,9 @@ import AddItem from './pages/AddItem';
 import ItemDetail from './pages/ItemDetail';
 import Settings from './pages/Settings';
 import Unlock from './pages/Unlock';
+import SecurityDashboard from './pages/SecurityDashboard';
+import TwoFactorSettings from './pages/TwoFactorSettings';
+import BiometricSettings from './pages/BiometricSettings';
 
 // 需要登录的路由保护
 function PrivateRoute({ children }) {
@@ -114,6 +117,30 @@ export default function App() {
           element={
             <PrivateRoute>
               <Settings />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/security"
+          element={
+            <PrivateRoute>
+              <SecurityDashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/2fa-settings"
+          element={
+            <PrivateRoute>
+              <TwoFactorSettings />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/biometric-settings"
+          element={
+            <PrivateRoute>
+              <BiometricSettings />
             </PrivateRoute>
           }
         />

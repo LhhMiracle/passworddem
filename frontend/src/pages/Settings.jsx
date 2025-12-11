@@ -248,6 +248,51 @@ export default function Settings() {
             </h3>
           </div>
 
+          {/* 安全中心入口 */}
+          <button
+            onClick={() => navigate('/security')}
+            className="w-full p-4 flex items-center justify-between text-left hover:bg-gray-50"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🛡️</span>
+              <div>
+                <p className="text-gray-800 font-medium">安全中心</p>
+                <p className="text-sm text-gray-500">密码健康报告、泄露检测</p>
+              </div>
+            </div>
+            <span className="text-gray-400">›</span>
+          </button>
+
+          {/* 双因素认证 */}
+          <button
+            onClick={() => navigate('/2fa-settings')}
+            className="w-full p-4 flex items-center justify-between text-left hover:bg-gray-50"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🔐</span>
+              <div>
+                <p className="text-gray-800 font-medium">双因素认证</p>
+                <p className="text-sm text-gray-500">使用验证器应用增强安全性</p>
+              </div>
+            </div>
+            <span className="text-gray-400">›</span>
+          </button>
+
+          {/* 生物识别解锁 */}
+          <button
+            onClick={() => navigate('/biometric-settings')}
+            className="w-full p-4 flex items-center justify-between text-left hover:bg-gray-50"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">👆</span>
+              <div>
+                <p className="text-gray-800 font-medium">生物识别解锁</p>
+                <p className="text-sm text-gray-500">使用 Touch ID / Face ID 快速解锁</p>
+              </div>
+            </div>
+            <span className="text-gray-400">›</span>
+          </button>
+
           {/* 自动锁定时间 */}
           <div className="p-4">
             <div className="flex items-center justify-between mb-3">

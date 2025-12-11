@@ -8,6 +8,7 @@ const crypto = require('crypto');
 const { body, validationResult } = require('express-validator');
 const { getDb } = require('../models/database');
 const { generateToken, authMiddleware } = require('../middleware/auth');
+const { verifyTOTP } = require('./twofa');
 
 const router = express.Router();
 
@@ -75,7 +76,7 @@ router.post('/login', loginValidation, async (req, res) => {
       return res.status(400).json({ error: errors.array()[0].msg });
     }
 
-    const { email, password } = req.body;
+    const { email, password, totpToken } = req.body;
     const db = getDb();
 
     // 查找用户
@@ -88,6 +89,39 @@ router.post('/login', loginValidation, async (req, res) => {
     const isValid = await bcrypt.compare(password, user.password_hash);
     if (!isValid) {
       return res.status(401).json({ error: '邮箱或密码错误' });
+    }
+
+    // 检查是否启用了 2FA
+    if (user.totp_enabled) {
+      // 如果没有提供 TOTP 码，返回需要 2FA 的响应
+      if (!totpToken) {
+        return res.json({
+          requiresTwoFactor: true,
+          message: '请输入双因素认证码'
+        });
+      }
+
+      // 验证 TOTP 或备份码
+      let verified = false;
+
+      if (totpToken.length === 6) {
+        verified = verifyTOTP(user.totp_secret, totpToken);
+      } else if (totpToken.length === 9 && totpToken.includes('-')) {
+        // 备份码验证
+        const backupCodes = JSON.parse(user.backup_codes || '[]');
+        const index = backupCodes.indexOf(totpToken.toUpperCase());
+        if (index !== -1) {
+          verified = true;
+          // 移除已使用的备份码
+          backupCodes.splice(index, 1);
+          db.prepare('UPDATE users SET backup_codes = ? WHERE id = ?')
+            .run(JSON.stringify(backupCodes), user.id);
+        }
+      }
+
+      if (!verified) {
+        return res.status(401).json({ error: '验证码错误' });
+      }
     }
 
     const token = generateToken(user.id, email);
@@ -110,7 +144,7 @@ router.post('/login', loginValidation, async (req, res) => {
 // 获取当前用户信息
 router.get('/me', authMiddleware, (req, res) => {
   const db = getDb();
-  const user = db.prepare('SELECT id, email, encryption_salt, created_at FROM users WHERE id = ?')
+  const user = db.prepare('SELECT id, email, encryption_salt, totp_enabled, created_at FROM users WHERE id = ?')
     .get(req.user.userId);
 
   if (!user) {
@@ -121,7 +155,8 @@ router.get('/me', authMiddleware, (req, res) => {
     user: {
       id: user.id,
       email: user.email,
-      createdAt: user.created_at
+      createdAt: user.created_at,
+      twoFactorEnabled: !!user.totp_enabled
     },
     encryptionSalt: user.encryption_salt
   });

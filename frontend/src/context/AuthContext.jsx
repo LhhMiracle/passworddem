@@ -42,8 +42,14 @@ export function AuthProvider({ children }) {
   };
 
   // 登录
-  const login = async (email, password) => {
-    const result = await authApi.login(email, password);
+  const login = async (email, password, totpToken = null) => {
+    const result = await authApi.login(email, password, totpToken);
+
+    // 检查是否需要 2FA
+    if (result.requiresTwoFactor) {
+      return result; // 返回给调用者处理 2FA 流程
+    }
+
     storage.setToken(result.token);
     storage.setUser(result.user);
     storage.setSalt(result.encryptionSalt);

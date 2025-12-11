@@ -99,6 +99,30 @@ function initDatabase() {
     // 列已存在，忽略错误
   }
 
+  // 2FA 相关列
+  try {
+    db.exec(`ALTER TABLE users ADD COLUMN totp_secret TEXT`);
+  } catch (e) {
+    // 列已存在，忽略错误
+  }
+  try {
+    db.exec(`ALTER TABLE users ADD COLUMN totp_enabled INTEGER DEFAULT 0`);
+  } catch (e) {
+    // 列已存在，忽略错误
+  }
+  try {
+    db.exec(`ALTER TABLE users ADD COLUMN backup_codes TEXT`);
+  } catch (e) {
+    // 列已存在，忽略错误
+  }
+
+  // WebAuthn 相关列
+  try {
+    db.exec(`ALTER TABLE users ADD COLUMN webauthn_credentials TEXT`);
+  } catch (e) {
+    // 列已存在，忽略错误
+  }
+
   console.log('✅ Database initialized');
 }
 

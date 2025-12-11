@@ -11,6 +11,9 @@ const rateLimit = require('express-rate-limit');
 const authRoutes = require('./routes/auth');
 const vaultRoutes = require('./routes/vault');
 const tagsRoutes = require('./routes/tags');
+const securityRoutes = require('./routes/security');
+const twofaRoutes = require('./routes/twofa');
+const webauthnRoutes = require('./routes/webauthn');
 const { initDatabase } = require('./models/database');
 
 const app = express();
@@ -41,6 +44,9 @@ initDatabase();
 app.use('/api/auth', authRoutes);
 app.use('/api/vault', vaultRoutes);
 app.use('/api/tags', tagsRoutes);
+app.use('/api/security', securityRoutes);
+app.use('/api/2fa', twofaRoutes);
+app.use('/api/webauthn', webauthnRoutes);
 
 // 健康检查
 app.get('/api/health', (req, res) => {

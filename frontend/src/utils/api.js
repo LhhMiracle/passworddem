@@ -48,10 +48,10 @@ export const auth = {
       body: JSON.stringify({ email, password })
     }),
 
-  login: (email, password) =>
+  login: (email, password, totpToken = null) =>
     request('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, password, totpToken })
     }),
 
   getMe: () => request('/auth/me'),
@@ -60,6 +60,32 @@ export const auth = {
     request('/auth/change-password', {
       method: 'POST',
       body: JSON.stringify({ currentPassword, newPassword })
+    })
+};
+
+// 双因素认证相关
+export const twoFactor = {
+  getStatus: () => request('/2fa/status'),
+
+  setup: () =>
+    request('/2fa/setup', { method: 'POST' }),
+
+  enable: (token) =>
+    request('/2fa/enable', {
+      method: 'POST',
+      body: JSON.stringify({ token })
+    }),
+
+  disable: (token) =>
+    request('/2fa/disable', {
+      method: 'POST',
+      body: JSON.stringify({ token })
+    }),
+
+  regenerateBackup: (token) =>
+    request('/2fa/regenerate-backup', {
+      method: 'POST',
+      body: JSON.stringify({ token })
     })
 };
 
@@ -111,6 +137,37 @@ export const vault = {
       method: 'PUT',
       body: JSON.stringify({ items })
     })
+};
+
+// WebAuthn (生物识别) 相关
+export const webauthn = {
+  getStatus: () => request('/webauthn/status'),
+
+  getRegisterOptions: () =>
+    request('/webauthn/register-options', { method: 'POST' }),
+
+  register: (credential, deviceName) =>
+    request('/webauthn/register', {
+      method: 'POST',
+      body: JSON.stringify({ credential, deviceName })
+    }),
+
+  getAuthenticateOptions: (email) =>
+    request('/webauthn/authenticate-options', {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    }),
+
+  authenticate: (email, credential) =>
+    request('/webauthn/authenticate', {
+      method: 'POST',
+      body: JSON.stringify({ email, credential })
+    }),
+
+  getCredentials: () => request('/webauthn/credentials'),
+
+  deleteCredential: (credentialId) =>
+    request(`/webauthn/credential/${encodeURIComponent(credentialId)}`, { method: 'DELETE' })
 };
 
 // 标签相关
