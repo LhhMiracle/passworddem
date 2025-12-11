@@ -1,0 +1,645 @@
+openapi: 3.0.3
+info:
+  title: 密码保险箱 API
+  description: |
+    密码保险箱后端 API 文档。
+
+    ## 认证
+    大多数 API 需要 JWT 认证。在登录后获取 token，然后在请求头中添加：
+    ```
+    Authorization: Bearer <your-token>
+    ```
+
+    ## 加密
+    所有密码数据在客户端使用 AES-256-GCM 加密后再传输和存储。
+  version: 1.0.0
+  contact:
+    name: Haihui Lu
+    url: https://github.com/LhhMiracle/passworddem
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3001/api
+    description: 开发服务器
+  - url: https://api.passwordvault.example.com/api
+    description: 生产服务器
+
+tags:
+  - name: 认证
+    description: 用户认证相关接口
+  - name: 保险箱
+    description: 密码条目管理
+  - name: 标签
+    description: 标签管理
+  - name: 安全
+    description: 安全功能（2FA、生物识别等）
+  - name: 共享
+    description: 密码共享功能
+  - name: 附件
+    description: 文件附件管理
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - 认证
+      summary: 用户注册
+      description: 创建新用户账号
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - name
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  minLength: 8
+                  example: SecurePassword123!
+                name:
+                  type: string
+                  example: 张三
+      responses:
+        '201':
+          description: 注册成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: 请求参数错误
+        '409':
+          description: 邮箱已被注册
+
+  /auth/login:
+    post:
+      tags:
+        - 认证
+      summary: 用户登录
+      description: 使用邮箱和密码登录
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: 邮箱或密码错误
+
+  /auth/verify-2fa:
+    post:
+      tags:
+        - 认证
+      summary: 验证 2FA
+      description: 验证双因素认证码
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - tempToken
+                - code
+              properties:
+                tempToken:
+                  type: string
+                code:
+                  type: string
+                  pattern: '^[0-9]{6}$'
+      responses:
+        '200':
+          description: 验证成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: 验证码错误
+
+  /vault:
+    get:
+      tags:
+        - 保险箱
+      summary: 获取所有密码条目
+      description: 获取当前用户的所有密码条目
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [login, card, wifi, note, other]
+          description: 按分类筛选
+        - name: favorite
+          in: query
+          schema:
+            type: boolean
+          description: 只显示收藏
+        - name: tag
+          in: query
+          schema:
+            type: integer
+          description: 按标签ID筛选
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VaultItem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - 保险箱
+      summary: 创建密码条目
+      description: 创建新的密码条目
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VaultItemInput'
+      responses:
+        '201':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VaultItem'
+        '400':
+          description: 请求参数错误
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /vault/{id}:
+    get:
+      tags:
+        - 保险箱
+      summary: 获取单个密码条目
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VaultItem'
+        '404':
+          description: 条目不存在
+
+    put:
+      tags:
+        - 保险箱
+      summary: 更新密码条目
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VaultItemInput'
+      responses:
+        '200':
+          description: 更新成功
+        '404':
+          description: 条目不存在
+
+    delete:
+      tags:
+        - 保险箱
+      summary: 删除密码条目
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: 删除成功
+        '404':
+          description: 条目不存在
+
+  /vault/{id}/favorite:
+    patch:
+      tags:
+        - 保险箱
+      summary: 切换收藏状态
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_favorite:
+                    type: boolean
+
+  /tags:
+    get:
+      tags:
+        - 标签
+      summary: 获取所有标签
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tag'
+
+    post:
+      tags:
+        - 标签
+      summary: 创建标签
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                color:
+                  type: string
+                  pattern: '^#[0-9A-Fa-f]{6}$'
+      responses:
+        '201':
+          description: 创建成功
+
+  /security/2fa/setup:
+    post:
+      tags:
+        - 安全
+      summary: 设置 2FA
+      description: 生成 TOTP 密钥和二维码
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  secret:
+                    type: string
+                  qrCode:
+                    type: string
+                    description: Base64 编码的二维码图片
+
+  /security/2fa/verify:
+    post:
+      tags:
+        - 安全
+      summary: 验证并启用 2FA
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - secret
+                - code
+              properties:
+                secret:
+                  type: string
+                code:
+                  type: string
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recoveryCodes:
+                    type: array
+                    items:
+                      type: string
+
+  /security/breach-check:
+    post:
+      tags:
+        - 安全
+      summary: 检查密码泄露
+      description: 使用 Have I Been Pwned API 检查密码是否泄露
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - passwordHash
+              properties:
+                passwordHash:
+                  type: string
+                  description: 密码 SHA-1 哈希的前5位
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  breached:
+                    type: boolean
+                  count:
+                    type: integer
+
+  /share:
+    post:
+      tags:
+        - 共享
+      summary: 创建共享链接
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - itemId
+                - encryptedData
+              properties:
+                itemId:
+                  type: integer
+                encryptedData:
+                  type: string
+                expiresIn:
+                  type: string
+                  enum: ['1h', '1d', '7d']
+                maxViews:
+                  type: integer
+                password:
+                  type: string
+      responses:
+        '201':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  shareId:
+                    type: string
+                  url:
+                    type: string
+
+  /attachments/{itemId}:
+    post:
+      tags:
+        - 附件
+      summary: 上传附件
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                encryptedKey:
+                  type: string
+      responses:
+        '201':
+          description: 上传成功
+
+    get:
+      tags:
+        - 附件
+      summary: 获取附件列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Attachment'
+
+  /health:
+    get:
+      summary: 健康检查
+      description: 检查服务是否正常运行
+      responses:
+        '200':
+          description: 服务正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: string
+                    format: date-time
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          type: object
+          properties:
+            id:
+              type: integer
+            email:
+              type: string
+            name:
+              type: string
+
+    VaultItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        category:
+          type: string
+          enum: [login, card, wifi, note, other]
+        title:
+          type: string
+        encrypted_data:
+          type: string
+        iv:
+          type: string
+        is_favorite:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+
+    VaultItemInput:
+      type: object
+      required:
+        - category
+        - title
+        - encrypted_data
+        - iv
+      properties:
+        category:
+          type: string
+          enum: [login, card, wifi, note, other]
+        title:
+          type: string
+        encrypted_data:
+          type: string
+        iv:
+          type: string
+        tags:
+          type: array
+          items:
+            type: integer
+
+    Tag:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        color:
+          type: string
+
+    Attachment:
+      type: object
+      properties:
+        id:
+          type: integer
+        filename:
+          type: string
+        mime_type:
+          type: string
+        size:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+  responses:
+    Unauthorized:
+      description: 未授权访问
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Unauthorized
