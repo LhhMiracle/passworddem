@@ -227,4 +227,104 @@ router.get('/stats', (req, res) => {
   }
 });
 
+// 导出所有密码数据
+router.get('/export', (req, res) => {
+  try {
+    const db = getDb();
+    const items = db.prepare(`
+      SELECT id, encrypted_data, iv, category, created_at, updated_at
+      FROM vault_items
+      WHERE user_id = ?
+      ORDER BY updated_at DESC
+    `).all(req.user.userId);
+
+    // 获取用户信息
+    const user = db.prepare('SELECT email FROM users WHERE id = ?').get(req.user.userId);
+
+    const exportData = {
+      version: '1.0',
+      exportDate: new Date().toISOString(),
+      user: user.email,
+      items: items.map(item => ({
+        id: item.id,
+        encryptedData: item.encrypted_data,
+        iv: item.iv,
+        category: item.category,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at
+      }))
+    };
+
+    res.json(exportData);
+  } catch (error) {
+    console.error('Export error:', error);
+    res.status(500).json({ error: '导出失败' });
+  }
+});
+
+// 导入密码数据
+router.post('/import', (req, res) => {
+  try {
+    const { items, mode = 'merge' } = req.body; // mode: 'merge' or 'replace'
+
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: '导入数据格式错误' });
+    }
+
+    const db = getDb();
+
+    // 如果是替换模式，先删除所有现有数据
+    if (mode === 'replace') {
+      db.prepare('DELETE FROM vault_items WHERE user_id = ?').run(req.user.userId);
+    }
+
+    // 批量插入
+    const insertStmt = db.prepare(`
+      INSERT INTO vault_items (user_id, encrypted_data, iv, category, created_at, updated_at)
+      VALUES (?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), COALESCE(?, CURRENT_TIMESTAMP))
+    `);
+
+    const insertMany = db.transaction((items) => {
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const item of items) {
+        try {
+          // 验证必需字段
+          if (!item.encryptedData || !item.iv) {
+            errorCount++;
+            continue;
+          }
+
+          insertStmt.run(
+            req.user.userId,
+            item.encryptedData,
+            item.iv,
+            item.category || 'login',
+            item.createdAt || null,
+            item.updatedAt || null
+          );
+          successCount++;
+        } catch (err) {
+          console.error('Import item error:', err);
+          errorCount++;
+        }
+      }
+
+      return { successCount, errorCount };
+    });
+
+    const result = insertMany(items);
+
+    res.json({
+      message: '导入完成',
+      ...result,
+      total: items.length
+    });
+  } catch (error) {
+    console.error('Import error:', error);
+    res.status(500).json({ error: '导入失败' });
+  }
+});
+
 module.exports = router;
