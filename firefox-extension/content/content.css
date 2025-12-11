@@ -1,0 +1,289 @@
+/* 密码保险箱 - 内容脚本样式 */
+
+/* 密码选择器 */
+#pv-password-picker {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 320px;
+  max-height: 400px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  z-index: 2147483647;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  overflow: hidden;
+  animation: pv-slide-in 0.2s ease;
+}
+
+@keyframes pv-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pv-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+  background: #0052CC;
+  color: white;
+  font-weight: 600;
+}
+
+.pv-close-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 5px;
+  opacity: 0.8;
+}
+
+.pv-close-btn:hover {
+  opacity: 1;
+}
+
+.pv-picker-content {
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.pv-loading {
+  padding: 30px;
+  text-align: center;
+  color: #666;
+}
+
+.pv-empty {
+  padding: 30px;
+  text-align: center;
+  color: #666;
+}
+
+.pv-empty a {
+  display: inline-block;
+  margin-top: 10px;
+  color: #0052CC;
+  text-decoration: none;
+}
+
+.pv-empty a:hover {
+  text-decoration: underline;
+}
+
+.pv-error {
+  padding: 30px;
+  text-align: center;
+  color: #e53935;
+}
+
+.pv-error-msg {
+  font-size: 12px;
+  margin-top: 5px;
+  color: #999;
+}
+
+.pv-password-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 15px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.pv-password-item:hover {
+  background: #f5f5f5;
+}
+
+.pv-password-item:last-child {
+  border-bottom: none;
+}
+
+.pv-item-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #0052CC;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 16px;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.pv-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.pv-item-title {
+  font-weight: 500;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pv-item-username {
+  font-size: 12px;
+  color: #666;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 保存密码提示 */
+#pv-save-prompt {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 2147483647;
+  animation: pv-slide-in 0.2s ease;
+}
+
+.pv-prompt-content {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: white;
+  padding: 15px 20px;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.pv-prompt-icon {
+  font-size: 32px;
+}
+
+.pv-prompt-text {
+  flex: 1;
+}
+
+.pv-prompt-text p {
+  margin: 0;
+  color: #333;
+}
+
+.pv-prompt-info {
+  font-size: 12px;
+  color: #666;
+  margin-top: 2px !important;
+}
+
+.pv-prompt-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.pv-save-btn,
+.pv-dismiss-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pv-save-btn {
+  background: #0052CC;
+  color: white;
+}
+
+.pv-save-btn:hover {
+  background: #0041a3;
+}
+
+.pv-dismiss-btn {
+  background: #f0f0f0;
+  color: #666;
+}
+
+.pv-dismiss-btn:hover {
+  background: #e0e0e0;
+}
+
+/* 通知 */
+.pv-notification {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  z-index: 2147483647;
+  animation: pv-notification-in 0.3s ease;
+}
+
+@keyframes pv-notification-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* 密码框图标 */
+.pv-input-wrapper {
+  position: relative !important;
+  display: inline-block !important;
+}
+
+.pv-field-icon {
+  position: absolute !important;
+  right: 8px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  background: none !important;
+  border: none !important;
+  font-size: 16px !important;
+  cursor: pointer !important;
+  padding: 4px !important;
+  opacity: 0.6 !important;
+  transition: opacity 0.2s !important;
+  z-index: 1000 !important;
+}
+
+.pv-field-icon:hover {
+  opacity: 1 !important;
+}
+
+/* 滚动条 */
+.pv-picker-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.pv-picker-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.pv-picker-content::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.pv-picker-content::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}

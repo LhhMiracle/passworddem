@@ -40,4 +40,10 @@ function authMiddleware(req, res, next) {
   next();
 }
 
-module.exports = { generateToken, verifyToken, authMiddleware, JWT_SECRET };
+module.exports = {
+  generateToken,
+  verifyToken,
+  authMiddleware,
+  authenticateToken: authMiddleware, // 别名，与新代码兼容
+  JWT_SECRET
+};

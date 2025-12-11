@@ -6,7 +6,7 @@
 
 const express = require('express');
 const { getDb } = require('../models/database');
-const { authenticate } = require('./auth');
+const { authMiddleware } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -18,7 +18,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
  * 上传附件
  * POST /api/attachments
  */
-router.post('/', authenticate, express.json({ limit: '15mb' }), (req, res) => {
+router.post('/', authMiddleware, express.json({ limit: '15mb' }), (req, res) => {
   try {
     const { itemId, filename, mimeType, encryptedData, iv } = req.body;
     const userId = req.user.id;
@@ -83,7 +83,7 @@ router.post('/', authenticate, express.json({ limit: '15mb' }), (req, res) => {
  * 获取条目的附件列表
  * GET /api/attachments/item/:itemId
  */
-router.get('/item/:itemId', authenticate, (req, res) => {
+router.get('/item/:itemId', authMiddleware, (req, res) => {
   try {
     const db = getDb();
     const userId = req.user.id;
@@ -122,7 +122,7 @@ router.get('/item/:itemId', authenticate, (req, res) => {
  * 获取附件详情（包含加密数据）
  * GET /api/attachments/:id
  */
-router.get('/:id', authenticate, (req, res) => {
+router.get('/:id', authMiddleware, (req, res) => {
   try {
     const db = getDb();
     const userId = req.user.id;
@@ -156,7 +156,7 @@ router.get('/:id', authenticate, (req, res) => {
  * 删除附件
  * DELETE /api/attachments/:id
  */
-router.delete('/:id', authenticate, (req, res) => {
+router.delete('/:id', authMiddleware, (req, res) => {
   try {
     const db = getDb();
     const userId = req.user.id;
@@ -181,7 +181,7 @@ router.delete('/:id', authenticate, (req, res) => {
  * 获取用户所有附件统计
  * GET /api/attachments/stats
  */
-router.get('/stats/summary', authenticate, (req, res) => {
+router.get('/stats/summary', authMiddleware, (req, res) => {
   try {
     const db = getDb();
     const userId = req.user.id;
