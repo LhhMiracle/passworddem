@@ -14,6 +14,8 @@ const tagsRoutes = require('./routes/tags');
 const securityRoutes = require('./routes/security');
 const twofaRoutes = require('./routes/twofa');
 const webauthnRoutes = require('./routes/webauthn');
+const shareRoutes = require('./routes/share');
+const attachmentsRoutes = require('./routes/attachments');
 const { initDatabase } = require('./models/database');
 
 const app = express();
@@ -47,6 +49,8 @@ app.use('/api/tags', tagsRoutes);
 app.use('/api/security', securityRoutes);
 app.use('/api/2fa', twofaRoutes);
 app.use('/api/webauthn', webauthnRoutes);
+app.use('/api/share', shareRoutes);
+app.use('/api/attachments', attachmentsRoutes);
 
 // 健康检查
 app.get('/api/health', (req, res) => {

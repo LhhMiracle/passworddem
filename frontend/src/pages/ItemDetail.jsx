@@ -1,13 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useVault, CATEGORIES } from '../context/VaultContext';
-import { evaluatePasswordStrength, getStrengthLabel, getStrengthColor } from '../utils/crypto';
+import { evaluatePasswordStrength, getStrengthLabel, getStrengthColor, encryptData } from '../utils/crypto';
 import { TagSelector } from '../components/TagManager';
+import ShareDialog from '../components/ShareDialog';
+import { attachments as attachmentsApi } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 
 export default function ItemDetail() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { items, tags, deleteItem, toggleFavorite, updateItemTags, loadTags } = useVault();
+  const { items, tags, deleteItem, toggleFavorite, updateItemTags, loadTags, getItemRaw } = useVault();
+  const { encryptionKey } = useAuth();
 
   const item = items.find(i => i.id === parseInt(id));
   const [showPassword, setShowPassword] = useState(false);
@@ -15,6 +19,12 @@ export default function ItemDetail() {
   const [deleting, setDeleting] = useState(false);
   const [showTagEditor, setShowTagEditor] = useState(false);
   const [selectedTags, setSelectedTags] = useState([]);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [attachmentsList, setAttachmentsList] = useState([]);
+  const [loadingAttachments, setLoadingAttachments] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [previewAttachment, setPreviewAttachment] = useState(null);
+  const fileInputRef = useRef(null);
 
   // 初始化选中的标签
   useEffect(() => {
@@ -23,6 +33,188 @@ export default function ItemDetail() {
     }
     loadTags().catch(console.error);
   }, [item, loadTags]);
+
+  // 加载附件列表
+  useEffect(() => {
+    if (item?.id) {
+      loadAttachments();
+    }
+  }, [item?.id]);
+
+  const loadAttachments = async () => {
+    if (!item?.id) return;
+    try {
+      setLoadingAttachments(true);
+      const result = await attachmentsApi.getByItem(item.id);
+      setAttachmentsList(result.attachments || []);
+    } catch (err) {
+      console.error('加载附件失败:', err);
+    } finally {
+      setLoadingAttachments(false);
+    }
+  };
+
+  // 处理文件上传
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // 验证文件类型
+    const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('不支持的文件类型，仅支持 PDF、PNG、JPG');
+      return;
+    }
+
+    // 验证文件大小
+    if (file.size > 10 * 1024 * 1024) {
+      alert('文件大小超过10MB限制');
+      return;
+    }
+
+    try {
+      setUploadingFile(true);
+
+      // 读取文件为 ArrayBuffer
+      const arrayBuffer = await file.arrayBuffer();
+
+      // 加密文件数据
+      const { encrypted, iv } = await encryptFileData(arrayBuffer, encryptionKey);
+
+      // 上传
+      await attachmentsApi.upload(
+        item.id,
+        file.name,
+        file.type,
+        encrypted,
+        iv
+      );
+
+      // 重新加载附件列表
+      await loadAttachments();
+      alert('上传成功');
+    } catch (err) {
+      console.error('上传失败:', err);
+      alert('上传失败: ' + (err.message || '未知错误'));
+    } finally {
+      setUploadingFile(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  // 加密文件数据
+  const encryptFileData = async (arrayBuffer, key) => {
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const cryptoKey = await crypto.subtle.importKey(
+      'raw',
+      key,
+      { name: 'AES-GCM' },
+      false,
+      ['encrypt']
+    );
+
+    const encrypted = await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv },
+      cryptoKey,
+      arrayBuffer
+    );
+
+    return {
+      encrypted: btoa(String.fromCharCode(...new Uint8Array(encrypted))),
+      iv: btoa(String.fromCharCode(...iv))
+    };
+  };
+
+  // 解密文件数据
+  const decryptFileData = async (encryptedBase64, ivBase64, key) => {
+    const encrypted = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
+    const iv = Uint8Array.from(atob(ivBase64), c => c.charCodeAt(0));
+
+    const cryptoKey = await crypto.subtle.importKey(
+      'raw',
+      key,
+      { name: 'AES-GCM' },
+      false,
+      ['decrypt']
+    );
+
+    const decrypted = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv },
+      cryptoKey,
+      encrypted
+    );
+
+    return decrypted;
+  };
+
+  // 预览/下载附件
+  const handleViewAttachment = async (attachment) => {
+    try {
+      const result = await attachmentsApi.get(attachment.id);
+      const decrypted = await decryptFileData(result.encryptedData, result.iv, encryptionKey);
+
+      const blob = new Blob([decrypted], { type: attachment.mimeType });
+      const url = URL.createObjectURL(blob);
+
+      if (attachment.mimeType.startsWith('image/')) {
+        setPreviewAttachment({ ...attachment, url });
+      } else {
+        // PDF 或其他文件直接下载
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = attachment.originalName;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    } catch (err) {
+      console.error('预览失败:', err);
+      alert('预览失败');
+    }
+  };
+
+  // 删除附件
+  const handleDeleteAttachment = async (attachmentId) => {
+    if (!window.confirm('确定要删除此附件吗？')) return;
+
+    try {
+      await attachmentsApi.delete(attachmentId);
+      await loadAttachments();
+    } catch (err) {
+      console.error('删除失败:', err);
+      alert('删除失败');
+    }
+  };
+
+  // 获取用于共享的加密数据
+  const getShareData = () => {
+    const rawItem = getItemRaw ? getItemRaw(item.id) : null;
+    if (rawItem) {
+      return {
+        encryptedData: rawItem.encryptedData,
+        iv: rawItem.iv
+      };
+    }
+    // 如果没有 getItemRaw，使用明文数据重新加密（仅用于共享）
+    const shareData = {
+      title: item.title,
+      username: item.username,
+      password: item.password,
+      url: item.website,
+      notes: item.notes
+    };
+    return {
+      encryptedData: btoa(JSON.stringify(shareData)),
+      iv: ''
+    };
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
 
   if (!item) {
     return (
@@ -113,6 +305,13 @@ export default function ItemDetail() {
           title={item.isFavorite ? '取消收藏' : '添加收藏'}
         >
           {item.isFavorite ? '⭐' : '☆'}
+        </button>
+        <button
+          onClick={() => setShowShareDialog(true)}
+          className="p-2 hover:bg-white/10 rounded-lg"
+          title="分享"
+        >
+          🔗
         </button>
         <button
           onClick={() => navigate(`/edit/${id}`)}
@@ -292,6 +491,62 @@ export default function ItemDetail() {
           </div>
         </div>
 
+        {/* 附件区域 */}
+        <div className="bg-white rounded-xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-sm font-medium text-gray-700">附件</p>
+            <label className="cursor-pointer">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.png,.jpg,.jpeg"
+                onChange={handleFileUpload}
+                disabled={uploadingFile}
+                className="hidden"
+              />
+              <span className="text-sm text-primary-500 hover:text-primary-600">
+                {uploadingFile ? '上传中...' : '+ 添加附件'}
+              </span>
+            </label>
+          </div>
+
+          {loadingAttachments ? (
+            <div className="text-center py-4">
+              <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto" />
+            </div>
+          ) : attachmentsList.length > 0 ? (
+            <div className="space-y-2">
+              {attachmentsList.map(att => (
+                <div key={att.id} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
+                  <span className="text-2xl">
+                    {att.mimeType.startsWith('image/') ? '🖼️' : '📄'}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800 truncate">{att.originalName}</p>
+                    <p className="text-xs text-gray-400">{formatFileSize(att.size)}</p>
+                  </div>
+                  <button
+                    onClick={() => handleViewAttachment(att)}
+                    className="px-2 py-1 text-xs bg-primary-100 text-primary-600 rounded hover:bg-primary-200"
+                  >
+                    {att.mimeType.startsWith('image/') ? '预览' : '下载'}
+                  </button>
+                  <button
+                    onClick={() => handleDeleteAttachment(att.id)}
+                    className="px-2 py-1 text-xs bg-red-50 text-red-500 rounded hover:bg-red-100"
+                  >
+                    删除
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-gray-400 text-sm py-4">
+              暂无附件，支持 PDF、PNG、JPG（最大10MB）
+            </p>
+          )}
+        </div>
+
         {/* 删除按钮 */}
         <button
           onClick={handleDelete}
@@ -301,6 +556,37 @@ export default function ItemDetail() {
           {deleting ? '删除中...' : '删除此密码'}
         </button>
       </div>
+
+      {/* 分享对话框 */}
+      {showShareDialog && (
+        <ShareDialog
+          item={item}
+          encryptedData={getShareData().encryptedData}
+          iv={getShareData().iv}
+          onClose={() => setShowShareDialog(false)}
+        />
+      )}
+
+      {/* 图片预览 */}
+      {previewAttachment && (
+        <div
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+          onClick={() => {
+            URL.revokeObjectURL(previewAttachment.url);
+            setPreviewAttachment(null);
+          }}
+        >
+          <div className="max-w-full max-h-full">
+            <img
+              src={previewAttachment.url}
+              alt={previewAttachment.originalName}
+              className="max-w-full max-h-[80vh] object-contain rounded-lg"
+            />
+            <p className="text-white text-center mt-2">{previewAttachment.originalName}</p>
+            <p className="text-white/60 text-center text-sm">点击任意位置关闭</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

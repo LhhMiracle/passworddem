@@ -231,6 +231,17 @@ export default function Settings() {
             <span className="text-gray-400">↑</span>
           </button>
 
+          <button
+            onClick={() => navigate('/share-history')}
+            className="w-full p-4 flex items-center justify-between text-left hover:bg-gray-50"
+          >
+            <div>
+              <p className="text-gray-800">共享记录</p>
+              <p className="text-sm text-gray-500">管理已创建的共享链接</p>
+            </div>
+            <span className="text-gray-400">›</span>
+          </button>
+
           <input
             ref={fileInputRef}
             type="file"

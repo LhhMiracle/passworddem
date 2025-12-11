@@ -170,6 +170,50 @@ export const webauthn = {
     request(`/webauthn/credential/${encodeURIComponent(credentialId)}`, { method: 'DELETE' })
 };
 
+// 共享链接相关
+export const share = {
+  create: (itemId, expiresIn, maxViews, password, encryptedData, iv) =>
+    request('/share', {
+      method: 'POST',
+      body: JSON.stringify({ itemId, expiresIn, maxViews, password, encryptedData, iv })
+    }),
+
+  getList: () => request('/share'),
+
+  revoke: (id) =>
+    request(`/share/${id}`, { method: 'DELETE' }),
+
+  check: (token) =>
+    request(`/share/check/${token}`),
+
+  access: (token, password = null) =>
+    request(`/share/access/${token}`, {
+      method: 'POST',
+      body: JSON.stringify({ password })
+    })
+};
+
+// 附件相关
+export const attachments = {
+  upload: (itemId, filename, mimeType, encryptedData, iv) =>
+    request('/attachments', {
+      method: 'POST',
+      body: JSON.stringify({ itemId, filename, mimeType, encryptedData, iv })
+    }),
+
+  getByItem: (itemId) =>
+    request(`/attachments/item/${itemId}`),
+
+  get: (id) =>
+    request(`/attachments/${id}`),
+
+  delete: (id) =>
+    request(`/attachments/${id}`, { method: 'DELETE' }),
+
+  getStats: () =>
+    request('/attachments/stats/summary')
+};
+
 // 标签相关
 export const tags = {
   getAll: () => request('/tags'),

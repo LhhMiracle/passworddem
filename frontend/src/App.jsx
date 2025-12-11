@@ -13,6 +13,8 @@ import Unlock from './pages/Unlock';
 import SecurityDashboard from './pages/SecurityDashboard';
 import TwoFactorSettings from './pages/TwoFactorSettings';
 import BiometricSettings from './pages/BiometricSettings';
+import SharedItem from './pages/SharedItem';
+import ShareHistory from './pages/ShareHistory';
 
 // 需要登录的路由保护
 function PrivateRoute({ children }) {
@@ -78,6 +80,7 @@ export default function App() {
           }
         />
         <Route path="/unlock" element={<Unlock />} />
+        <Route path="/shared/:token" element={<SharedItem />} />
 
         {/* 需要登录的路由 */}
         <Route
@@ -141,6 +144,14 @@ export default function App() {
           element={
             <PrivateRoute>
               <BiometricSettings />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/share-history"
+          element={
+            <PrivateRoute>
+              <ShareHistory />
             </PrivateRoute>
           }
         />

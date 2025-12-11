@@ -24,6 +24,7 @@ export const SPECIAL_FILTERS = [
 export function VaultProvider({ children }) {
   const { encryptionKey } = useAuth();
   const [items, setItems] = useState([]);
+  const [rawItems, setRawItems] = useState({}); // 存储原始加密数据
   const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -34,6 +35,16 @@ export function VaultProvider({ children }) {
     setLoading(true);
     try {
       const { items: encryptedItems } = await vaultApi.getItems();
+
+      // 存储原始加密数据
+      const rawMap = {};
+      encryptedItems.forEach(item => {
+        rawMap[item.id] = {
+          encryptedData: item.encrypted_data,
+          iv: item.iv
+        };
+      });
+      setRawItems(rawMap);
 
       // 解密所有条目
       const decryptedItems = await Promise.all(
@@ -213,6 +224,16 @@ export function VaultProvider({ children }) {
     }
   };
 
+  // 获取条目的原始加密数据
+  const getItemRaw = (itemId) => {
+    return rawItems[itemId] || null;
+  };
+
+  // 解密单个条目（用于共享页面）
+  const decryptItem = (item) => {
+    return items.find(i => i.id === item.id);
+  };
+
   const value = {
     items,
     tags,
@@ -229,6 +250,8 @@ export function VaultProvider({ children }) {
     getFavorites,
     toggleFavorite,
     updateItemTags,
+    getItemRaw,
+    decryptItem,
     categories: CATEGORIES
   };
 

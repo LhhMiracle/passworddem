@@ -123,6 +123,52 @@ function initDatabase() {
     // 列已存在，忽略错误
   }
 
+  // 共享链接表
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS shared_links (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      item_id INTEGER NOT NULL,
+      token TEXT UNIQUE NOT NULL,
+      encrypted_data TEXT NOT NULL,
+      iv TEXT NOT NULL,
+      expires_at DATETIME NOT NULL,
+      max_views INTEGER,
+      view_count INTEGER DEFAULT 0,
+      password_hash TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      revoked INTEGER DEFAULT 0,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (item_id) REFERENCES vault_items(id) ON DELETE CASCADE
+    )
+  `);
+
+  // 附件表
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS attachments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      item_id INTEGER NOT NULL,
+      filename TEXT NOT NULL,
+      original_name TEXT NOT NULL,
+      mime_type TEXT NOT NULL,
+      size INTEGER NOT NULL,
+      encrypted_data TEXT NOT NULL,
+      iv TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (item_id) REFERENCES vault_items(id) ON DELETE CASCADE
+    )
+  `);
+
+  // 创建共享链接索引
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_shared_links_token ON shared_links(token);
+    CREATE INDEX IF NOT EXISTS idx_shared_links_user_id ON shared_links(user_id);
+    CREATE INDEX IF NOT EXISTS idx_shared_links_item_id ON shared_links(item_id);
+    CREATE INDEX IF NOT EXISTS idx_attachments_item_id ON attachments(item_id);
+  `);
+
   console.log('✅ Database initialized');
 }
 
