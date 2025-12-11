@@ -90,7 +90,15 @@ export const vault = {
       body: JSON.stringify({ items, lastSyncTime })
     }),
 
-  getStats: () => request('/vault/stats')
+  getStats: () => request('/vault/stats'),
+
+  exportData: () => request('/vault/export'),
+
+  importData: (items, mode = 'merge') =>
+    request('/vault/import', {
+      method: 'POST',
+      body: JSON.stringify({ items, mode })
+    })
 };
 
 export { ApiError };
