@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea"/>
+      <stop offset="100%" style="stop-color:#764ba2"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="100" fill="url(#gradient)"/>
+  <g fill="white">
+    <!-- Lock body -->
+    <rect x="156" y="220" width="200" height="180" rx="20"/>
+    <!-- Lock shackle -->
+    <path d="M196 220V170C196 120 226 90 256 90S316 120 316 170V220H356V170C356 98 308 50 256 50S156 98 156 170V220H196Z"/>
+    <!-- Keyhole -->
+    <circle cx="256" cy="300" r="30" fill="#667eea"/>
+    <rect x="246" y="310" width="20" height="50" rx="5" fill="#667eea"/>
+  </g>
+</svg>

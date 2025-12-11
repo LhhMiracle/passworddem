@@ -1,0 +1,61 @@
+{
+  "name": "password-vault-desktop",
+  "version": "1.0.0",
+  "description": "密码保险箱 - 桌面版",
+  "main": "electron/main.js",
+  "author": "Haihui Lu",
+  "license": "MIT",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:vite\" \"npm run dev:electron\"",
+    "dev:vite": "vite",
+    "dev:electron": "wait-on http://localhost:5173 && electron .",
+    "build": "vite build && electron-builder",
+    "build:mac": "vite build && electron-builder --mac",
+    "build:win": "vite build && electron-builder --win",
+    "build:linux": "vite build && electron-builder --linux",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "electron-store": "^8.1.0",
+    "electron-updater": "^6.1.7"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "concurrently": "^8.2.2",
+    "electron": "^28.1.0",
+    "electron-builder": "^24.9.1",
+    "vite": "^5.0.10",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.passwordvault.desktop",
+    "productName": "密码保险箱",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*"
+    ],
+    "mac": {
+      "target": ["dmg", "zip"],
+      "icon": "electron/icons/icon.icns",
+      "category": "public.app-category.productivity"
+    },
+    "win": {
+      "target": ["nsis", "portable"],
+      "icon": "electron/icons/icon.ico"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "icon": "electron/icons",
+      "category": "Utility"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}
