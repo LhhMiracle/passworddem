@@ -48,10 +48,10 @@ export const auth = {
       body: JSON.stringify({ email, password })
     }),
 
-  login: (email, password) =>
+  login: (email, password, totpToken = null) =>
     request('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, password, totpToken })
     }),
 
   getMe: () => request('/auth/me'),
@@ -60,6 +60,32 @@ export const auth = {
     request('/auth/change-password', {
       method: 'POST',
       body: JSON.stringify({ currentPassword, newPassword })
+    })
+};
+
+// 双因素认证相关
+export const twoFactor = {
+  getStatus: () => request('/2fa/status'),
+
+  setup: () =>
+    request('/2fa/setup', { method: 'POST' }),
+
+  enable: (token) =>
+    request('/2fa/enable', {
+      method: 'POST',
+      body: JSON.stringify({ token })
+    }),
+
+  disable: (token) =>
+    request('/2fa/disable', {
+      method: 'POST',
+      body: JSON.stringify({ token })
+    }),
+
+  regenerateBackup: (token) =>
+    request('/2fa/regenerate-backup', {
+      method: 'POST',
+      body: JSON.stringify({ token })
     })
 };
 
@@ -98,6 +124,124 @@ export const vault = {
     request('/vault/import', {
       method: 'POST',
       body: JSON.stringify({ items, mode })
+    }),
+
+  // 收藏相关
+  getFavorites: () => request('/vault/favorites'),
+
+  toggleFavorite: (id) =>
+    request(`/vault/items/${id}/favorite`, { method: 'POST' }),
+
+  reorderFavorites: (items) =>
+    request('/vault/favorites/reorder', {
+      method: 'PUT',
+      body: JSON.stringify({ items })
+    })
+};
+
+// WebAuthn (生物识别) 相关
+export const webauthn = {
+  getStatus: () => request('/webauthn/status'),
+
+  getRegisterOptions: () =>
+    request('/webauthn/register-options', { method: 'POST' }),
+
+  register: (credential, deviceName) =>
+    request('/webauthn/register', {
+      method: 'POST',
+      body: JSON.stringify({ credential, deviceName })
+    }),
+
+  getAuthenticateOptions: (email) =>
+    request('/webauthn/authenticate-options', {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    }),
+
+  authenticate: (email, credential) =>
+    request('/webauthn/authenticate', {
+      method: 'POST',
+      body: JSON.stringify({ email, credential })
+    }),
+
+  getCredentials: () => request('/webauthn/credentials'),
+
+  deleteCredential: (credentialId) =>
+    request(`/webauthn/credential/${encodeURIComponent(credentialId)}`, { method: 'DELETE' })
+};
+
+// 共享链接相关
+export const share = {
+  create: (itemId, expiresIn, maxViews, password, encryptedData, iv) =>
+    request('/share', {
+      method: 'POST',
+      body: JSON.stringify({ itemId, expiresIn, maxViews, password, encryptedData, iv })
+    }),
+
+  getList: () => request('/share'),
+
+  revoke: (id) =>
+    request(`/share/${id}`, { method: 'DELETE' }),
+
+  check: (token) =>
+    request(`/share/check/${token}`),
+
+  access: (token, password = null) =>
+    request(`/share/access/${token}`, {
+      method: 'POST',
+      body: JSON.stringify({ password })
+    })
+};
+
+// 附件相关
+export const attachments = {
+  upload: (itemId, filename, mimeType, encryptedData, iv) =>
+    request('/attachments', {
+      method: 'POST',
+      body: JSON.stringify({ itemId, filename, mimeType, encryptedData, iv })
+    }),
+
+  getByItem: (itemId) =>
+    request(`/attachments/item/${itemId}`),
+
+  get: (id) =>
+    request(`/attachments/${id}`),
+
+  delete: (id) =>
+    request(`/attachments/${id}`, { method: 'DELETE' }),
+
+  getStats: () =>
+    request('/attachments/stats/summary')
+};
+
+// 标签相关
+export const tags = {
+  getAll: () => request('/tags'),
+
+  create: (name, color) =>
+    request('/tags', {
+      method: 'POST',
+      body: JSON.stringify({ name, color })
+    }),
+
+  update: (id, name, color) =>
+    request(`/tags/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ name, color })
+    }),
+
+  delete: (id) =>
+    request(`/tags/${id}`, { method: 'DELETE' }),
+
+  getItemsByTag: (tagId) => request(`/tags/${tagId}/items`),
+
+  // 密码条目标签
+  getItemTags: (itemId) => request(`/tags/items/${itemId}/tags`),
+
+  setItemTags: (itemId, tagIds) =>
+    request(`/tags/items/${itemId}/tags`, {
+      method: 'POST',
+      body: JSON.stringify({ tagIds })
     })
 };
 

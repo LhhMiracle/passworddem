@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback } from 'react';
-import { vault as vaultApi } from '../utils/api';
+import { vault as vaultApi, tags as tagsApi } from '../utils/api';
 import { encryptData, decryptData } from '../utils/crypto';
 import { storage } from '../utils/storage';
 import { useAuth } from './AuthContext';
@@ -15,9 +15,17 @@ export const CATEGORIES = [
   { id: 'other', name: '其他', icon: '📦', color: '#6b7280' }
 ];
 
+// 特殊筛选项
+export const SPECIAL_FILTERS = [
+  { id: 'all', name: '全部', icon: '📋' },
+  { id: 'favorites', name: '收藏', icon: '⭐' }
+];
+
 export function VaultProvider({ children }) {
   const { encryptionKey } = useAuth();
   const [items, setItems] = useState([]);
+  const [rawItems, setRawItems] = useState({}); // 存储原始加密数据
+  const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // 加载所有密码
@@ -27,6 +35,16 @@ export function VaultProvider({ children }) {
     setLoading(true);
     try {
       const { items: encryptedItems } = await vaultApi.getItems();
+
+      // 存储原始加密数据
+      const rawMap = {};
+      encryptedItems.forEach(item => {
+        rawMap[item.id] = {
+          encryptedData: item.encrypted_data,
+          iv: item.iv
+        };
+      });
+      setRawItems(rawMap);
 
       // 解密所有条目
       const decryptedItems = await Promise.all(
@@ -41,6 +59,9 @@ export function VaultProvider({ children }) {
               id: item.id,
               ...decrypted,
               category: item.category,
+              isFavorite: !!item.is_favorite,
+              favoriteOrder: item.favorite_order,
+              tags: item.tags || [],
               createdAt: item.created_at,
               updatedAt: item.updated_at
             };
@@ -65,6 +86,16 @@ export function VaultProvider({ children }) {
       setLoading(false);
     }
   }, [encryptionKey]);
+
+  // 加载所有标签
+  const loadTags = useCallback(async () => {
+    try {
+      const { tags: tagList } = await tagsApi.getAll();
+      setTags(tagList);
+    } catch (error) {
+      console.error('加载标签失败:', error);
+    }
+  }, []);
 
   // 添加密码
   const addItem = async (itemData) => {
@@ -128,23 +159,99 @@ export function VaultProvider({ children }) {
   const getStats = () => {
     return {
       total: items.length,
+      favorites: items.filter(i => i.isFavorite).length,
       byCategory: CATEGORIES.reduce((acc, cat) => {
         acc[cat.id] = items.filter(i => i.category === cat.id).length;
+        return acc;
+      }, {}),
+      byTag: tags.reduce((acc, tag) => {
+        acc[tag.id] = items.filter(i => i.tags?.some(t => t.id === tag.id)).length;
         return acc;
       }, {})
     };
   };
 
+  // 切换收藏状态
+  const toggleFavorite = async (id) => {
+    try {
+      const result = await vaultApi.toggleFavorite(id);
+
+      setItems(prev =>
+        prev.map(item =>
+          item.id === id
+            ? { ...item, isFavorite: !!result.is_favorite, favoriteOrder: result.favorite_order }
+            : item
+        )
+      );
+
+      return result;
+    } catch (error) {
+      console.error('切换收藏失败:', error);
+      throw error;
+    }
+  };
+
+  // 按标签筛选
+  const filterByTag = (tagId) => {
+    if (!tagId) return items;
+    return items.filter(item => item.tags?.some(t => t.id === tagId));
+  };
+
+  // 获取收藏列表
+  const getFavorites = () => {
+    return items
+      .filter(i => i.isFavorite)
+      .sort((a, b) => (a.favoriteOrder || 0) - (b.favoriteOrder || 0));
+  };
+
+  // 更新条目标签
+  const updateItemTags = async (itemId, tagIds) => {
+    try {
+      const { tags: newTags } = await tagsApi.setItemTags(itemId, tagIds);
+
+      setItems(prev =>
+        prev.map(item =>
+          item.id === itemId
+            ? { ...item, tags: newTags }
+            : item
+        )
+      );
+
+      return newTags;
+    } catch (error) {
+      console.error('更新标签失败:', error);
+      throw error;
+    }
+  };
+
+  // 获取条目的原始加密数据
+  const getItemRaw = (itemId) => {
+    return rawItems[itemId] || null;
+  };
+
+  // 解密单个条目（用于共享页面）
+  const decryptItem = (item) => {
+    return items.find(i => i.id === item.id);
+  };
+
   const value = {
     items,
+    tags,
     loading,
     loadItems,
+    loadTags,
     addItem,
     updateItem,
     deleteItem,
     searchItems,
     filterByCategory,
+    filterByTag,
     getStats,
+    getFavorites,
+    toggleFavorite,
+    updateItemTags,
+    getItemRaw,
+    decryptItem,
     categories: CATEGORIES
   };
 

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>密码保险箱</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div id="app">
+    <!-- 加载状态 -->
+    <div id="loading-view" class="view">
+      <div class="loading-spinner"></div>
+    </div>
+
+    <!-- 登录视图 -->
+    <div id="login-view" class="view hidden">
+      <div class="header">
+        <div class="logo">🔐</div>
+        <h1>密码保险箱</h1>
+      </div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <input type="email" id="email" placeholder="邮箱" required>
+        </div>
+        <div class="form-group">
+          <input type="password" id="password" placeholder="主密码" required>
+        </div>
+        <div id="login-error" class="error hidden"></div>
+        <button type="submit" class="btn btn-primary" id="login-btn">
+          登录
+        </button>
+      </form>
+
+      <div class="footer-link">
+        <a href="http://localhost:5173/register" target="_blank">创建账户</a>
+      </div>
+    </div>
+
+    <!-- 主视图 -->
+    <div id="main-view" class="view hidden">
+      <div class="header-bar">
+        <div class="user-info">
+          <span class="user-email" id="user-email"></span>
+        </div>
+        <button class="icon-btn" id="settings-btn" title="设置">⚙️</button>
+      </div>
+
+      <!-- 搜索栏 -->
+      <div class="search-bar">
+        <input type="text" id="search-input" placeholder="搜索密码...">
+      </div>
+
+      <!-- 当前网站匹配 -->
+      <div id="current-site-section" class="section hidden">
+        <div class="section-header">
+          <span>当前网站</span>
+          <span class="badge" id="match-count">0</span>
+        </div>
+        <div id="matched-list" class="password-list"></div>
+      </div>
+
+      <!-- 所有密码 -->
+      <div class="section">
+        <div class="section-header">
+          <span>所有密码</span>
+          <span class="badge" id="total-count">0</span>
+        </div>
+        <div id="all-list" class="password-list"></div>
+      </div>
+
+      <!-- 空状态 -->
+      <div id="empty-state" class="empty-state hidden">
+        <div class="empty-icon">📭</div>
+        <p>暂无保存的密码</p>
+        <a href="http://localhost:5173/add" target="_blank" class="btn btn-secondary">添加密码</a>
+      </div>
+    </div>
+
+    <!-- 密码详情视图 -->
+    <div id="detail-view" class="view hidden">
+      <div class="header-bar">
+        <button class="icon-btn" id="back-btn">←</button>
+        <span class="title" id="detail-title"></span>
+        <button class="icon-btn" id="edit-btn" title="编辑">✏️</button>
+      </div>
+
+      <div class="detail-content">
+        <div class="detail-item">
+          <label>用户名</label>
+          <div class="detail-value">
+            <span id="detail-username"></span>
+            <button class="copy-btn" data-field="username">📋</button>
+          </div>
+        </div>
+
+        <div class="detail-item">
+          <label>密码</label>
+          <div class="detail-value">
+            <span id="detail-password" class="password-masked">••••••••</span>
+            <button class="toggle-btn" id="toggle-password">👁️</button>
+            <button class="copy-btn" data-field="password">📋</button>
+          </div>
+        </div>
+
+        <div class="detail-item" id="website-item">
+          <label>网站</label>
+          <div class="detail-value">
+            <a id="detail-website" href="#" target="_blank"></a>
+          </div>
+        </div>
+
+        <div class="action-buttons">
+          <button class="btn btn-primary" id="fill-btn">填充到页面</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 设置视图 -->
+    <div id="settings-view" class="view hidden">
+      <div class="header-bar">
+        <button class="icon-btn" id="settings-back-btn">←</button>
+        <span class="title">设置</span>
+      </div>
+
+      <div class="settings-content">
+        <a href="http://localhost:5173/vault" target="_blank" class="settings-item">
+          <span>打开保险箱</span>
+          <span>→</span>
+        </a>
+        <a href="http://localhost:5173/add" target="_blank" class="settings-item">
+          <span>添加密码</span>
+          <span>→</span>
+        </a>
+        <a href="http://localhost:5173/settings" target="_blank" class="settings-item">
+          <span>账户设置</span>
+          <span>→</span>
+        </a>
+        <div class="settings-divider"></div>
+        <button class="settings-item logout-btn" id="logout-btn">
+          <span>退出登录</span>
+        </button>
+      </div>
+
+      <div class="version">
+        密码保险箱 v1.0.0
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

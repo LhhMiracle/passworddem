@@ -4,11 +4,14 @@ import { useAuth } from '../context/AuthContext';
 import { useVault } from '../context/VaultContext';
 import { auth as authApi, vault as vaultApi } from '../utils/api';
 import { storage } from '../utils/storage';
+import { useAutoLockSettings } from '../components/AutoLockProvider';
+import { AUTO_LOCK_OPTIONS } from '../hooks/useAutoLock';
 
 export default function Settings() {
   const navigate = useNavigate();
   const { user, logout, lock } = useAuth();
   const { getStats, loadItems } = useVault();
+  const { settings: lockSettings, updateSettings: updateLockSettings } = useAutoLockSettings();
   const fileInputRef = useRef(null);
 
   const [showChangePassword, setShowChangePassword] = useState(false);
@@ -228,6 +231,17 @@ export default function Settings() {
             <span className="text-gray-400">↑</span>
           </button>
 
+          <button
+            onClick={() => navigate('/share-history')}
+            className="w-full p-4 flex items-center justify-between text-left hover:bg-gray-50"
+          >
+            <div>
+              <p className="text-gray-800">共享记录</p>
+              <p className="text-sm text-gray-500">管理已创建的共享链接</p>
+            </div>
+            <span className="text-gray-400">›</span>
+          </button>
+
           <input
             ref={fileInputRef}
             type="file"
@@ -243,6 +257,125 @@ export default function Settings() {
             <h3 className="font-medium text-gray-800 flex items-center gap-2">
               🔒 安全设置
             </h3>
+          </div>
+
+          {/* 安全中心入口 */}
+          <button
+            onClick={() => navigate('/security')}
+            className="w-full p-4 flex items-center justify-between text-left hover:bg-gray-50"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🛡️</span>
+              <div>
+                <p className="text-gray-800 font-medium">安全中心</p>
+                <p className="text-sm text-gray-500">密码健康报告、泄露检测</p>
+              </div>
+            </div>
+            <span className="text-gray-400">›</span>
+          </button>
+
+          {/* 双因素认证 */}
+          <button
+            onClick={() => navigate('/2fa-settings')}
+            className="w-full p-4 flex items-center justify-between text-left hover:bg-gray-50"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🔐</span>
+              <div>
+                <p className="text-gray-800 font-medium">双因素认证</p>
+                <p className="text-sm text-gray-500">使用验证器应用增强安全性</p>
+              </div>
+            </div>
+            <span className="text-gray-400">›</span>
+          </button>
+
+          {/* 生物识别解锁 */}
+          <button
+            onClick={() => navigate('/biometric-settings')}
+            className="w-full p-4 flex items-center justify-between text-left hover:bg-gray-50"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">👆</span>
+              <div>
+                <p className="text-gray-800 font-medium">生物识别解锁</p>
+                <p className="text-sm text-gray-500">使用 Touch ID / Face ID 快速解锁</p>
+              </div>
+            </div>
+            <span className="text-gray-400">›</span>
+          </button>
+
+          {/* 自动锁定时间 */}
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="text-gray-800">自动锁定</p>
+                <p className="text-sm text-gray-500">无操作后自动锁定</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {AUTO_LOCK_OPTIONS.map(option => (
+                <button
+                  key={option.value}
+                  onClick={() => updateLockSettings({ autoLockTime: option.value })}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    lockSettings.autoLockTime === option.value
+                      ? 'bg-primary-500 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 页面隐藏时锁定 */}
+          <div className="p-4 flex items-center justify-between">
+            <div>
+              <p className="text-gray-800">切换标签页时锁定</p>
+              <p className="text-sm text-gray-500">离开页面时自动锁定</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={lockSettings.lockOnHide}
+                onChange={(e) => updateLockSettings({ lockOnHide: e.target.checked })}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
+            </label>
+          </div>
+
+          {/* 锁定前提醒 */}
+          <div className="p-4 flex items-center justify-between">
+            <div>
+              <p className="text-gray-800">锁定前提醒</p>
+              <p className="text-sm text-gray-500">锁定前30秒显示倒计时</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={lockSettings.showLockWarning}
+                onChange={(e) => updateLockSettings({ showLockWarning: e.target.checked })}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
+            </label>
+          </div>
+
+          {/* 快捷键提示 */}
+          <div className="p-4">
+            <p className="text-gray-800 mb-2">快捷键</p>
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <kbd className="px-2 py-1 bg-gray-100 rounded text-xs font-mono">
+                {navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}
+              </kbd>
+              <span>+</span>
+              <kbd className="px-2 py-1 bg-gray-100 rounded text-xs font-mono">Shift</kbd>
+              <span>+</span>
+              <kbd className="px-2 py-1 bg-gray-100 rounded text-xs font-mono">L</kbd>
+              <span className="ml-2">快速锁定</span>
+            </div>
           </div>
 
           <button

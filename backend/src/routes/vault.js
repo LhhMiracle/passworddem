@@ -17,13 +17,43 @@ router.get('/items', (req, res) => {
   try {
     const db = getDb();
     const items = db.prepare(`
-      SELECT id, encrypted_data, iv, category, created_at, updated_at
-      FROM vault_items
-      WHERE user_id = ?
-      ORDER BY updated_at DESC
+      SELECT vi.id, vi.encrypted_data, vi.iv, vi.category, vi.is_favorite, vi.favorite_order, vi.created_at, vi.updated_at,
+             GROUP_CONCAT(t.id) as tag_ids,
+             GROUP_CONCAT(t.name) as tag_names,
+             GROUP_CONCAT(t.color) as tag_colors
+      FROM vault_items vi
+      LEFT JOIN item_tags it ON vi.id = it.item_id
+      LEFT JOIN tags t ON it.tag_id = t.id
+      WHERE vi.user_id = ?
+      GROUP BY vi.id
+      ORDER BY vi.is_favorite DESC, vi.favorite_order ASC, vi.updated_at DESC
     `).all(req.user.userId);
 
-    res.json({ items });
+    // 解析标签数据
+    const parsedItems = items.map(item => {
+      const tags = [];
+      if (item.tag_ids) {
+        const ids = item.tag_ids.split(',');
+        const names = item.tag_names.split(',');
+        const colors = item.tag_colors.split(',');
+        for (let i = 0; i < ids.length; i++) {
+          tags.push({ id: parseInt(ids[i]), name: names[i], color: colors[i] });
+        }
+      }
+      return {
+        id: item.id,
+        encrypted_data: item.encrypted_data,
+        iv: item.iv,
+        category: item.category,
+        is_favorite: item.is_favorite,
+        favorite_order: item.favorite_order,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+        tags
+      };
+    });
+
+    res.json({ items: parsedItems });
   } catch (error) {
     console.error('Get items error:', error);
     res.status(500).json({ error: '获取密码列表失败' });
@@ -207,6 +237,9 @@ router.get('/stats', (req, res) => {
     const total = db.prepare('SELECT COUNT(*) as count FROM vault_items WHERE user_id = ?')
       .get(req.user.userId).count;
 
+    const favorites = db.prepare('SELECT COUNT(*) as count FROM vault_items WHERE user_id = ? AND is_favorite = 1')
+      .get(req.user.userId).count;
+
     const byCategory = db.prepare(`
       SELECT category, COUNT(*) as count
       FROM vault_items
@@ -216,6 +249,7 @@ router.get('/stats', (req, res) => {
 
     res.json({
       total,
+      favorites,
       byCategory: byCategory.reduce((acc, item) => {
         acc[item.category] = item.count;
         return acc;
@@ -224,6 +258,126 @@ router.get('/stats', (req, res) => {
   } catch (error) {
     console.error('Stats error:', error);
     res.status(500).json({ error: '获取统计信息失败' });
+  }
+});
+
+// 获取收藏列表
+router.get('/favorites', (req, res) => {
+  try {
+    const db = getDb();
+    const items = db.prepare(`
+      SELECT vi.id, vi.encrypted_data, vi.iv, vi.category, vi.is_favorite, vi.favorite_order, vi.created_at, vi.updated_at,
+             GROUP_CONCAT(t.id) as tag_ids,
+             GROUP_CONCAT(t.name) as tag_names,
+             GROUP_CONCAT(t.color) as tag_colors
+      FROM vault_items vi
+      LEFT JOIN item_tags it ON vi.id = it.item_id
+      LEFT JOIN tags t ON it.tag_id = t.id
+      WHERE vi.user_id = ? AND vi.is_favorite = 1
+      GROUP BY vi.id
+      ORDER BY vi.favorite_order ASC, vi.updated_at DESC
+    `).all(req.user.userId);
+
+    // 解析标签数据
+    const parsedItems = items.map(item => {
+      const tags = [];
+      if (item.tag_ids) {
+        const ids = item.tag_ids.split(',');
+        const names = item.tag_names.split(',');
+        const colors = item.tag_colors.split(',');
+        for (let i = 0; i < ids.length; i++) {
+          tags.push({ id: parseInt(ids[i]), name: names[i], color: colors[i] });
+        }
+      }
+      return {
+        id: item.id,
+        encrypted_data: item.encrypted_data,
+        iv: item.iv,
+        category: item.category,
+        is_favorite: item.is_favorite,
+        favorite_order: item.favorite_order,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+        tags
+      };
+    });
+
+    res.json({ items: parsedItems });
+  } catch (error) {
+    console.error('Get favorites error:', error);
+    res.status(500).json({ error: '获取收藏列表失败' });
+  }
+});
+
+// 切换收藏状态
+router.post('/items/:id/favorite', (req, res) => {
+  try {
+    const db = getDb();
+
+    // 获取当前状态
+    const item = db.prepare('SELECT id, is_favorite FROM vault_items WHERE id = ? AND user_id = ?')
+      .get(req.params.id, req.user.userId);
+
+    if (!item) {
+      return res.status(404).json({ error: '密码条目不存在' });
+    }
+
+    const newFavoriteStatus = item.is_favorite ? 0 : 1;
+
+    // 如果添加到收藏，计算新的排序位置
+    let favoriteOrder = null;
+    if (newFavoriteStatus === 1) {
+      const maxOrder = db.prepare('SELECT MAX(favorite_order) as max_order FROM vault_items WHERE user_id = ? AND is_favorite = 1')
+        .get(req.user.userId);
+      favoriteOrder = (maxOrder?.max_order || 0) + 1;
+    }
+
+    db.prepare(`
+      UPDATE vault_items
+      SET is_favorite = ?, favorite_order = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ? AND user_id = ?
+    `).run(newFavoriteStatus, favoriteOrder, req.params.id, req.user.userId);
+
+    res.json({
+      message: newFavoriteStatus ? '已添加到收藏' : '已取消收藏',
+      is_favorite: newFavoriteStatus,
+      favorite_order: favoriteOrder
+    });
+  } catch (error) {
+    console.error('Toggle favorite error:', error);
+    res.status(500).json({ error: '切换收藏状态失败' });
+  }
+});
+
+// 更新收藏排序
+router.put('/favorites/reorder', (req, res) => {
+  try {
+    const { items } = req.body; // [{ id, order }, ...]
+
+    if (!Array.isArray(items)) {
+      return res.status(400).json({ error: '参数格式错误' });
+    }
+
+    const db = getDb();
+
+    const updateStmt = db.prepare(`
+      UPDATE vault_items
+      SET favorite_order = ?
+      WHERE id = ? AND user_id = ? AND is_favorite = 1
+    `);
+
+    const updateMany = db.transaction((items) => {
+      for (const item of items) {
+        updateStmt.run(item.order, item.id, req.user.userId);
+      }
+    });
+
+    updateMany(items);
+
+    res.json({ message: '排序更新成功' });
+  } catch (error) {
+    console.error('Reorder favorites error:', error);
+    res.status(500).json({ error: '更新排序失败' });
   }
 });
 
